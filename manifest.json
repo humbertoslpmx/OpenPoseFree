@@ -1,0 +1,21 @@
+{
+  "name": "OpenPoseFree AI Studio",
+  "short_name": "OpenPoseFree",
+  "description": "Free in-browser OpenPose editor and AI video generator for ControlNet, Stable Diffusion and ComfyUI.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#070a14",
+  "theme_color": "#7c3aed",
+  "icons": [
+    {
+      "src": "rkopenpose_tn.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "rkopenpose.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
