@@ -1,0 +1,25 @@
+{
+  "name": "openposefree",
+  "version": "2.5.0",
+  "description": "OpenPoseFree - AI Pose Editor & Video Studio for ControlNet, AnimateDiff and ComfyUI",
+  "main": "rkopenpose.html",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "preview": "wrangler preview",
+    "start": "npx serve ."
+  },
+  "keywords": [
+    "openpose",
+    "controlnet",
+    "mediapipe",
+    "movenet",
+    "pose-detection",
+    "animatediff",
+    "comfyui"
+  ],
+  "author": "Juan Humberto Cisneros Rodriguez",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^3.90.0"
+  }
+}

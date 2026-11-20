@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenPoseFree — AI Pose Editor & Video Studio</title>
+  <meta name="description" content="OpenPoseFree: Suite completa y gratuita de creación, edición y generación de poses humanas OpenPose para imágenes y video frame a frame con IA (MediaPipe Holistic 543 pts y MoveNet 18 pts). Compatible con ControlNet, ComfyUI y Stable Diffusion.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✨</text></svg>">
+  <style>
+    :root {
+      --bg-body: #070a14;
+      --bg-card: #0d1424;
+      --bg-card-hover: #121b32;
+      --border-card: #1c273e;
+      --border-accent-purple: #9333ea;
+      --border-accent-blue: #0284c7;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-purple: #c084fc;
+      --accent-cyan: #38bdf8;
+      --radius-lg: 16px;
+      --radius-md: 10px;
+      --radius-sm: 6px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-body);
+      background-image: 
+        radial-gradient(circle at 20% 0%, rgba(147, 51, 234, 0.18) 0%, transparent 50%),
+        radial-gradient(circle at 80% 0%, rgba(56, 189, 248, 0.15) 0%, transparent 50%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Navbar */
+    .app-navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(13, 20, 36, 0.90);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border-card);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .brand-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .brand-logo-icon {
+      font-size: 1.5rem;
+      background: linear-gradient(135deg, #a855f7, #38bdf8);
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+    }
+    .brand-title {
+      font-weight: 800;
+      font-size: 1.25rem;
+      letter-spacing: -0.5px;
+      color: #fff;
+    }
+    .brand-title .accent {
+      background: linear-gradient(90deg, #c084fc, #38bdf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .bmc-nav-btn a.bmc-btn,
+    .bmc-nav-btn .bmc-button {
+      height: 32px !important;
+      line-height: 30px !important;
+      font-size: 13px !important;
+      padding: 0 10px !important;
+      border-radius: 6px !important;
+      box-shadow: 0 2px 8px rgba(255, 221, 0, 0.25) !important;
+      text-decoration: none !important;
+      display: inline-flex !important;
+      align-items: center !important;
+    }
+    .btn-github {
+      background: #182238;
+      color: #e2e8f0;
+      border: 1px solid #283755;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-github:hover {
+      background: #23314e;
+      color: #fff;
+    }
+
+    /* Main Container */
+    .hub-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 20px 60px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: rgba(147, 51, 234, 0.15);
+      border: 1px solid rgba(147, 51, 234, 0.4);
+      color: #c084fc;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .hero-title {
+      font-size: 2.6rem;
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 14px;
+      letter-spacing: -0.5px;
+    }
+    .hero-subtitle {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      max-width: 680px;
+      line-height: 1.5;
+      margin-bottom: 40px;
+    }
+
+    /* Edition Grid */
+    .editions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      width: 100%;
+      text-align: left;
+    }
+
+    .edition-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: all 0.25s ease;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    .edition-card:hover {
+      background: var(--bg-card-hover);
+      transform: translateY(-4px);
+    }
+    .edition-card.card-holistic {
+      border-color: rgba(168, 85, 247, 0.4);
+    }
+    .edition-card.card-holistic:hover {
+      border-color: #a855f7;
+      box-shadow: 0 12px 35px rgba(168, 85, 247, 0.2);
+    }
+    .edition-card.card-standard {
+      border-color: rgba(56, 189, 248, 0.4);
+    }
+    .edition-card.card-standard:hover {
+      border-color: #38bdf8;
+      box-shadow: 0 12px 35px rgba(56, 189, 248, 0.2);
+    }
+
+    .card-badge {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 12px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .badge-holistic {
+      background: #3b0764;
+      color: #e9d5ff;
+      border: 1px solid #7e22ce;
+    }
+    .badge-standard {
+      background: #082f49;
+      color: #bae6fd;
+      border: 1px solid #0284c7;
+    }
+
+    .card-icon {
+      font-size: 2.2rem;
+      margin-bottom: 12px;
+    }
+    .card-title {
+      font-size: 1.45rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #fff;
+    }
+    .card-engine {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--accent-purple);
+      margin-bottom: 14px;
+    }
+    .card-standard .card-engine {
+      color: var(--accent-cyan);
+    }
+    .card-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+      margin-bottom: 20px;
+    }
+
+    .features-list {
+      list-style: none;
+      margin-bottom: 26px;
+      flex: 1;
+    }
+    .features-list li {
+      font-size: 0.84rem;
+      color: #cbd5e1;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .features-list li span {
+      color: #10b981;
+      font-size: 0.95rem;
+    }
+
+    .btn-launch {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .btn-launch-holistic {
+      background: linear-gradient(135deg, #7c3aed, #a855f7);
+      color: #fff;
+      border: 1px solid #a855f7;
+      box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4);
+    }
+    .btn-launch-holistic:hover {
+      background: linear-gradient(135deg, #6d28d9, #9333ea);
+      box-shadow: 0 6px 20px rgba(124, 58, 237, 0.6);
+      transform: translateY(-1px);
+    }
+    .btn-launch-standard {
+      background: linear-gradient(135deg, #0284c7, #0ea5e9);
+      color: #fff;
+      border: 1px solid #38bdf8;
+      box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
+    }
+    .btn-launch-standard:hover {
+      background: linear-gradient(135deg, #0369a1, #0284c7);
+      box-shadow: 0 6px 20px rgba(14, 165, 233, 0.6);
+      transform: translateY(-1px);
+    }
+
+    /* Footer */
+    footer.app-footer {
+      background: #060912;
+      border-top: 1px solid #141c2c;
+      padding: 16px 24px;
+      font-size: 0.78rem;
+      color: #94a3b8;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: auto;
+    }
+    .footer-author-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      max-width: 720px;
+    }
+    .footer-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: top center;
+      border: 2px solid #a855f7;
+      box-shadow: 0 0 12px rgba(168, 85, 247, 0.35);
+      flex-shrink: 0;
+    }
+    .footer-author-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .footer-author-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .footer-author-name {
+      font-weight: 700;
+      color: #f1f5f9;
+      font-size: 0.83rem;
+    }
+    .footer-divider { color: #475569; }
+    .footer-portfolio-link {
+      color: #c084fc !important;
+      font-weight: 600;
+      text-decoration: none !important;
+    }
+    .footer-portfolio-link:hover { text-decoration: underline !important; }
+    .footer-github-link {
+      color: #94a3b8 !important;
+      font-weight: 600;
+      text-decoration: none !important;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .footer-github-link:hover { color: #fff !important; text-decoration: underline !important; }
+    .footer-donation-link {
+      color: #facc15 !important;
+      font-weight: 600;
+      text-decoration: none !important;
+    }
+    .footer-donation-link:hover { text-decoration: underline !important; }
+    .footer-author-msg {
+      margin: 0;
+      font-size: 0.73rem;
+      color: #64748b;
+      line-height: 1.35;
+    }
+    .footer-credits {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 3px;
+      font-size: 0.72rem;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <header class="app-navbar">
+    <a href="#" class="brand-box">
+      <div class="brand-logo-icon">✨</div>
+      <div class="brand-title">OpenPose<span class="accent">Free</span></div>
+    </a>
+    <div class="nav-actions">
+      <!-- Buy Me a Coffee Donation Widget -->
+      <div class="bmc-nav-btn">
+        <script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="HumbertoCisneros" data-color="#FFDD00" data-emoji="" data-font="Cookie" data-text="Buy me a coffee" data-outline-color="#000000" data-font-color="#000000" data-coffee-color="#ffffff"></script>
+      </div>
+      <!-- GitHub Button -->
+      <a href="https://github.com/humbertoslpmx/OpenPoseFree" target="_blank" rel="noopener noreferrer" class="btn-github">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        <span>GitHub</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Hero & Hub Section -->
+  <main class="hub-container">
+    <div class="hero-badge">✨ 100% Client-Side • Sin Instalación • Compatible con ControlNet</div>
+    <h1 class="hero-title">Estudio de Poses Humanas y Video con IA</h1>
+    <p class="hero-subtitle">
+      Genera, edita y exporta esqueletos anatómicos OpenPose para imágenes y videos completos frame a frame directamente en tu navegador. Selecciona la edición que mejor se adapte a tu flujo de trabajo:
+    </p>
+
+    <!-- Editions Selection Grid -->
+    <div class="editions-grid">
+
+      <!-- Edition 1: Holistic -->
+      <div class="edition-card card-holistic">
+        <span class="card-badge badge-holistic">Recomendado</span>
+        <div class="card-icon">🎭</div>
+        <h2 class="card-title">Holistic Edition</h2>
+        <div class="card-engine">Google MediaPipe Holistic • 543 Puntos</div>
+        <p class="card-desc">
+          Extracción anatómica ultra detallada con captura simultánea de cuerpo, articulaciones de dedos y contorno facial completo.
+        </p>
+        <ul class="features-list">
+          <li><span>✓</span> <strong>Cuerpo completo:</strong> 33 puntos con talones y dedos de pie</li>
+          <li><span>✓</span> <strong>Manos de alta fidelidad:</strong> 42 puntos (todas las falanges)</li>
+          <li><span>✓</span> <strong>Malla facial (Face Mesh):</strong> 468 puntos (ojos, labios, cejas)</li>
+          <li><span>✓</span> <strong>Video Frame a Frame:</strong> Exportación en MP4 (H.264), MKV y WebM</li>
+          <li><span>✓</span> <strong>Ideal para:</strong> ControlNet OpenPose Full, baile y animación facial</li>
+        </ul>
+        <a href="openposefree-holistic/index.html" class="btn-launch btn-launch-holistic">
+          <span>🚀</span> Iniciar Holistic Studio
+        </a>
+      </div>
+
+      <!-- Edition 2: Standard MoveNet -->
+      <div class="edition-card card-standard">
+        <span class="card-badge badge-standard">Ultra Rápido</span>
+        <div class="card-icon">⚡</div>
+        <h2 class="card-title">Standard Edition</h2>
+        <div class="card-engine">Google MoveNet (Thunder / Lightning) • 18 Puntos</div>
+        <p class="card-desc">
+          El clásico editor OpenPose COCO-18 optimizado para máxima velocidad y fluidez en cualquier dispositivo.
+        </p>
+        <ul class="features-list">
+          <li><span>✓</span> <strong>Estándar OpenPose COCO:</strong> 18 articulaciones principales</li>
+          <li><span>✓</span> <strong>Modo Hueso y D-Pad:</strong> Edición manual ágil y presets integrados</li>
+          <li><span>✓</span> <strong>Motor Ligero:</strong> Carga ultrarrápida incluso en equipos modestos</li>
+          <li><span>✓</span> <strong>Conversión de Video:</strong> Exportación rápida de poses corporales</li>
+          <li><span>✓</span> <strong>Ideal para:</strong> ControlNet OpenPose Body y bocetos rápidos</li>
+        </ul>
+        <a href="rkopenpose.html" class="btn-launch btn-launch-standard">
+          <span>⚡</span> Iniciar Standard Studio
+        </a>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Modern App Footer -->
+  <footer class="app-footer">
+    <div class="footer-author-box">
+      <img src="humberto_cisneros.jpg" alt="Juan Humberto Cisneros Rodríguez" class="footer-avatar" />
+      <div class="footer-author-info">
+        <div class="footer-author-header">
+          <span class="footer-author-name">Juan Humberto Cisneros Rodríguez</span>
+          <span class="footer-divider">•</span>
+          <a href="https://humbertocisneros.myportfolio.com/" target="_blank" rel="noopener noreferrer" class="footer-portfolio-link">
+            <span>🌐</span> Portafolio
+          </a>
+          <span class="footer-divider">•</span>
+          <a href="https://github.com/humbertoslpmx/OpenPoseFree" target="_blank" rel="noopener noreferrer" class="footer-github-link">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: -2px;"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> GitHub
+          </a>
+          <span class="footer-divider">•</span>
+          <a href="https://buymeacoffee.com/humbertocisneros" target="_blank" rel="noopener noreferrer" class="footer-donation-link">
+            <span>☕</span> Donar
+          </a>
+        </div>
+        <p class="footer-author-msg">
+          Software libre y gratuito: siéntete libre de utilizarlo en tus proyectos personales y comerciales. Si te resulta útil, considera apoyar su desarrollo continuo con una donación.
+        </p>
+      </div>
+    </div>
+    <div class="footer-credits">
+      <a href="https://github.com/humbertoslpmx/OpenPoseFree" target="_blank" rel="noopener noreferrer" style="color: #94a3b8; font-weight: 500; text-decoration: none;">
+        OpenPoseFree on GitHub
+      </a>
+      <span style="color: #475569;">MIT License</span>
+    </div>
+  </footer>
+
+</body>
+</html>
