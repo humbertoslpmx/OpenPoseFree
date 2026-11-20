@@ -1,0 +1,6330 @@
+<!--
+====================================================================
+OpenPoseFree - AI Pose Editor & Video Studio
+Open-source web application for OpenPose pose editing and full-video generation.
+Based on Rock's Simple OpenPose Editor (MIT License) by Rock Stevens.
+====================================================================
+-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenPoseFree - AI Pose Editor & Video Studio</title>
+  
+  <style>
+    :root {
+      --bg-body: #080c16;
+      --bg-card: #0f172a;
+      --bg-card-header: #141f36;
+      --bg-card-inner: #0b1120;
+      --border-card: #1e293b;
+      --border-focus: #38bdf8;
+      
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+      --text-muted: #64748b;
+      
+      --accent-primary: #0284c7;
+      --accent-primary-hover: #0369a1;
+      --accent-cyan: #38bdf8;
+      --accent-green: #10b981;
+      --accent-green-hover: #059669;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-red-hover: #dc2626;
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+      --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.45);
+      --shadow-glow: 0 0 15px rgba(2, 132, 199, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background-color: var(--bg-body);
+      background-image: radial-gradient(circle at 50% 0%, #172554 0%, transparent 60%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Custom Modern Scrollbars */
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #090e1a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #253349;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #38bdf8;
+    }
+
+    /* Top Sticky Navigation Bar */
+    .app-navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border-card);
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    }
+
+    .brand-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-logo-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #0284c7, #38bdf8);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+    }
+
+    .brand-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #fff;
+    }
+
+    .brand-title span.accent {
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-badge {
+      font-size: 0.72rem;
+      background: #1e293b;
+      color: #38bdf8;
+      border: 1px solid #334155;
+      padding: 2px 7px;
+      border-radius: 12px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-nav-action {
+      background: #1e293b;
+      color: #e2e8f0;
+      border: 1px solid #334155;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-nav-action:hover {
+      background: #2a374d;
+      border-color: #475569;
+      color: #fff;
+    }
+
+    .btn-nav-primary {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: #fff;
+      border: none;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+    }
+    .btn-nav-primary:hover {
+      background: linear-gradient(135deg, #0369a1, #1d4ed8);
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.5);
+      transform: translateY(-1px);
+    }
+
+    /* Collapsible Quick Guide Banner */
+    .quick-guide-panel {
+      background: #0d1527;
+      border-bottom: 1px solid #1e293b;
+      padding: 12px 20px;
+      display: none;
+      animation: fadeIn 0.25s ease-in-out;
+    }
+
+    .guide-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    .guide-step-card {
+      background: #131c31;
+      border: 1px solid #1f2c46;
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      font-size: 0.8rem;
+      color: #cbd5e1;
+      line-height: 1.4;
+    }
+
+    .guide-step-title {
+      font-weight: bold;
+      color: #38bdf8;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* Main Application Container Layout */
+    .app-workspace {
+      display: flex;
+      flex: 1;
+      padding: 16px;
+      gap: 16px;
+      max-width: 1750px;
+      margin: 0 auto;
+      width: 100%;
+      align-items: flex-start;
+    }
+
+    /* Sidebar Panels (Left & Right) */
+    .panel-sidebar-left {
+      width: 285px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .panel-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .panel-sidebar-right {
+      flex: 1;
+      min-width: 370px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Unified Modern Card Styles */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .card:hover {
+      border-color: #2e3c54;
+    }
+
+    .card-header {
+      background: var(--bg-card-header);
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-card);
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      letter-spacing: -0.2px;
+    }
+
+    .card-body {
+      padding: 12px 14px;
+    }
+
+    /* Modern Form Controls */
+    label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-sub);
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    select, input[type="number"], input[type="file"] {
+      width: 100%;
+      background: #131c31;
+      border: 1px solid #23314a;
+      color: #f1f5f9;
+      padding: 7px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    select:focus, input[type="number"]:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 7px 14px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-secondary {
+      background: #1e293b;
+      color: #e2e8f0;
+      border-color: #334155;
+    }
+    .btn-secondary:hover {
+      background: #2a374d;
+      border-color: #475569;
+      color: #fff;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #0369a1, #1d4ed8);
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.5);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #059669, #10b981);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    }
+    .btn-success:hover {
+      background: linear-gradient(135deg, #047857, #059669);
+    }
+
+    .btn-danger {
+      background: #c62828;
+      color: #fff;
+      border-color: #e53935;
+    }
+    .btn-danger:hover {
+      background: #b71c1c;
+    }
+
+    .btn-ai {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      color: #fff;
+      border: none;
+      padding: 9px 16px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.92rem;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+      transition: all 0.2s;
+      width: 100%;
+    }
+    .btn-ai:hover {
+      background: linear-gradient(135deg, #0369a1, #075985);
+      box-shadow: 0 6px 18px rgba(2, 132, 199, 0.6);
+      transform: translateY(-1px);
+    }
+    .btn-ai:disabled {
+      background: #334155;
+      color: #64748b;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    /* Joystick D-Pad Controls */
+    .dpad-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 6px;
+      background: #090e1a;
+      border-radius: 12px;
+      border: 1px solid #1a2436;
+      width: 130px;
+      margin: 0 auto;
+    }
+    .dpad-row {
+      display: flex;
+      gap: 4px;
+    }
+    .dpad-btn {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #172237;
+      border: 1px solid #283955;
+      color: #94a3b8;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .dpad-btn:hover {
+      background: #23334e;
+      color: #38bdf8;
+      border-color: #38bdf8;
+    }
+    .dpad-btn:active {
+      background: #0284c7;
+      color: #fff;
+    }
+
+    /* Canvas Frame & Center Area */
+    .canvas-viewport-box {
+      background: #000;
+      border: 2px solid #23314a;
+      border-radius: var(--radius-md);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(2, 132, 199, 0.15);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    canvas {
+      display: block;
+      background: #000;
+      image-rendering: pixelated;
+    }
+
+    .canvas-toolbar-top {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-md);
+      padding: 8px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge-status {
+      background: #131f33;
+      color: #38bdf8;
+      border: 1px solid #1e3352;
+    }
+    .badge-status.state-loading {
+      background: #2e230f;
+      color: #fbbf24;
+      border-color: #614611;
+    }
+    .badge-status.state-ready {
+      background: #0d281a;
+      color: #34d399;
+      border-color: #1b5333;
+    }
+    .badge-status.state-error {
+      background: #331316;
+      color: #f87171;
+      border-color: #611f24;
+    }
+
+    /* Video and AI Panel Components */
+    .ai-preview-box {
+      margin-top: 10px;
+      border: 1px dashed #29384e;
+      border-radius: var(--radius-sm);
+      padding: 10px;
+      background: #090e1a;
+      text-align: center;
+    }
+
+    .video-timeline-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      justify-content: center;
+    }
+
+    .keyframe-strip {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 8px 4px;
+      max-width: 100%;
+      min-height: 85px;
+      align-items: center;
+    }
+    .keyframe-card {
+      border: 1px solid #23314a;
+      border-radius: 6px;
+      padding: 4px;
+      background: #131c31;
+      text-align: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .keyframe-card:hover {
+      border-color: #38bdf8;
+      background: #1d2c47;
+      transform: translateY(-2px);
+    }
+    .keyframe-card img {
+      width: 75px;
+      height: 75px;
+      object-fit: cover;
+      display: block;
+      border-radius: 4px;
+    }
+    .keyframe-card span {
+      font-size: 0.72rem;
+      color: #94a3b8;
+      display: block;
+      margin-top: 3px;
+    }
+
+    /* Footer */
+    footer.app-footer {
+      background: #090e1a;
+      border-top: 1px solid #1a2436;
+      padding: 12px 20px;
+      font-size: 0.75rem;
+      color: #64748b;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: auto;
+    }
+
+    footer.app-footer a {
+      color: #38bdf8;
+      text-decoration: none;
+    }
+    footer.app-footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 1200px) {
+      .app-workspace {
+        flex-direction: column;
+        align-items: center;
+      }
+      .panel-sidebar-left, .panel-sidebar-right {
+        width: 100%;
+        max-width: 600px;
+      }
+    }
+  
+    /* Buy Me a Coffee widget adjustments */
+    .bmc-nav-btn {
+      display: inline-flex;
+      align-items: center;
+    }
+    .bmc-nav-btn a.bmc-btn,
+    .bmc-nav-btn .bmc-button {
+      height: 32px !important;
+      line-height: 30px !important;
+      font-size: 13px !important;
+      padding: 0 10px !important;
+      border-radius: 6px !important;
+      box-shadow: 0 2px 8px rgba(255, 221, 0, 0.25) !important;
+      transition: all 0.2s ease !important;
+      text-decoration: none !important;
+      display: inline-flex !important;
+      align-items: center !important;
+    }
+    .bmc-nav-btn a.bmc-btn:hover,
+    .bmc-nav-btn .bmc-button:hover {
+      box-shadow: 0 4px 14px rgba(255, 221, 0, 0.45) !important;
+      transform: translateY(-1px) !important;
+    }
+
+  
+    /* Enhanced Discreet Author Footer */
+    footer.app-footer {
+      background: #090e1a;
+      border-top: 1px solid #1a2436;
+      padding: 14px 24px;
+      font-size: 0.78rem;
+      color: #94a3b8;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: auto;
+    }
+    .footer-author-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      max-width: 720px;
+    }
+    .footer-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: top center;
+      border: 2px solid #38bdf8;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+      flex-shrink: 0;
+    }
+    .footer-author-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .footer-author-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .footer-author-name {
+      font-weight: 700;
+      color: #f1f5f9;
+      font-size: 0.83rem;
+    }
+    .footer-divider {
+      color: #475569;
+    }
+    .footer-portfolio-link {
+      color: #38bdf8 !important;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      transition: all 0.2s;
+      text-decoration: none !important;
+    }
+    .footer-portfolio-link:hover {
+      color: #7dd3fc !important;
+      text-decoration: underline !important;
+    }
+    .footer-donation-link {
+      color: #facc15 !important;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      transition: all 0.2s;
+      text-decoration: none !important;
+    }
+    .footer-donation-link:hover {
+      color: #fde047 !important;
+      text-decoration: underline !important;
+    }
+    .footer-author-msg {
+      margin: 0;
+      font-size: 0.73rem;
+      color: #64748b;
+      line-height: 1.35;
+    }
+    .footer-credits {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 3px;
+      font-size: 0.72rem;
+      color: #64748b;
+    }
+    @media (max-width: 768px) {
+      .footer-credits {
+        align-items: flex-start;
+      }
+    }
+
+  
+    .footer-github-link {
+      color: #94a3b8 !important;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+      text-decoration: none !important;
+    }
+    .footer-github-link:hover {
+      color: #f1f5f9 !important;
+      text-decoration: underline !important;
+    }
+  
+  </style>
+
+  <!-- TensorFlow.js and MoveNet Pose Detection -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.1.3/dist/pose-detection.min.js"></script>
+  <!-- OpenPoseFree AI Detector Module -->
+  <script src="pose_detector.js"></script>
+</head>
+
+<body>
+
+  <!-- Top Sticky Navbar -->
+  <header class="app-navbar">
+    <div class="brand-box">
+      <div class="brand-logo-icon">⚡</div>
+      <div>
+        <div class="brand-title">OpenPose<span class="accent">Free</span></div>
+      </div>
+      <span class="brand-badge">v2.5 AI Studio</span>
+    </div>
+
+    <div class="nav-actions">
+      <!-- Buy Me a Coffee Donation Widget -->
+      <div class="bmc-nav-btn">
+        <script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="HumbertoCisneros" data-color="#FFDD00" data-emoji="" data-font="Cookie" data-text="Buy me a coffee" data-outline-color="#000000" data-font-color="#000000" data-coffee-color="#ffffff" ></script>
+      </div>
+      <!-- Botón Guía Rápida -->
+      <button class="btn-nav-action" onclick="toggleQuickGuide()">
+        <span>ℹ️</span> <span data-i18n="instructions.guideBtn">Guía Rápida</span>
+      </button>
+
+      <!-- Selector de Idioma -->
+      <div style="display: flex; align-items: center; gap: 6px; background: #131c31; padding: 3px 8px; border-radius: var(--radius-sm); border: 1px solid #23314a;">
+        <span style="font-size: 0.9rem;">🌐</span>
+        <select id="languageSelector" onchange="i18n.setLanguage(this.value)" style="background: transparent; border: none; color: #fff; font-size: 0.8rem; font-weight: 600; cursor: pointer; padding: 2px 4px; width: auto;">
+        </select>
+      </div>
+
+      <!-- Botón Acción Rápida: Exportar PNG -->
+      <button class="btn btn-nav-primary" onclick="exportCanvas()">
+        <span>📸</span> <span data-i18n="export.exportBtn">Exportar PNG</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Banner Desplegable de Guía Rápida -->
+  <div id="quickGuideBanner" class="quick-guide-panel">
+    <div class="guide-cards-grid">
+      <div class="guide-step-card">
+        <div class="guide-step-title"><span>1️⃣</span> <span data-i18n="instructions.step1Title">Lienzo</span></div>
+        <span data-i18n-html="instructions.step1">Paso 1. Selecciona el tamaño del lienzo de salida.</span>
+      </div>
+      <div class="guide-step-card">
+        <div class="guide-step-title"><span>2️⃣</span> <span data-i18n="instructions.step2Title">Pose</span></div>
+        <span data-i18n-html="instructions.step2">Paso 2. Selecciona un ajuste predefinido o carga un archivo JSON.</span>
+      </div>
+      <div class="guide-step-card">
+        <div class="guide-step-title"><span>3️⃣</span> <span data-i18n="instructions.step3Title">Ajustes & IA</span></div>
+        <span data-i18n-html="instructions.step3">Paso 3. Ajusta articulaciones, activa Modo Hueso o detecta con IA.</span>
+      </div>
+      <div class="guide-step-card">
+        <div class="guide-step-title"><span>4️⃣</span> <span data-i18n="instructions.step4Title">Exportar</span></div>
+        <span data-i18n-html="instructions.step4">Paso 4. Guarda la imagen PNG o video para OpenPose ControlNet.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Workspace (3 Columns) -->
+  <main class="app-workspace">
+
+    <!-- ========================================== -->
+    <!-- COLUMNA IZQUIERDA: Presets y Ajustes      -->
+    <!-- ========================================== -->
+    <aside class="panel-sidebar-left">
+      
+      <!-- Card: Tamaño del Lienzo -->
+      <div class="card">
+        <div class="card-header">
+          <span>📐 <span data-i18n="canvasSize.label">Tamaño del Lienzo</span></span>
+        </div>
+        <div class="card-body">
+          <select id="canvasSizeSelector" onchange="updateCanvasSize()">
+            <option value="256x256">256 x 256</option>
+            <option value="256x512">256 x 512</option>
+            <option value="512x256">512 x 256</option>
+            <option value="512x512" selected>512 x 512 (SD 1.5)</option>
+            <option value="512x768">512 x 768 (Retrato)</option>
+            <option value="768x512">768 x 512 (Paisaje)</option>
+            <option value="768x768">768 x 768 (SDXL Cuadrado)</option>
+            <option value="1024x768">1024 x 768 (SDXL Horizontal)</option>
+            <option value="768x1024">768 x 1024 (SDXL Vertical)</option>
+            <option value="1024x1024">1024 x 1024 (SDXL 1:1)</option>
+          </select>
+          <div style="display: flex; gap: 4px; margin-top: 8px;">
+            <button class="btn btn-secondary" style="flex: 1; padding: 3px 6px; font-size: 0.72rem;" onclick="setPresetCanvasSize('512x512')">512²</button>
+            <button class="btn btn-secondary" style="flex: 1; padding: 3px 6px; font-size: 0.72rem;" onclick="setPresetCanvasSize('768x768')">768²</button>
+            <button class="btn btn-secondary" style="flex: 1; padding: 3px 6px; font-size: 0.72rem;" onclick="setPresetCanvasSize('1024x1024')">1024²</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Poses Predefinidas -->
+      <div class="card">
+        <div class="card-header">
+          <span>🎭 <span data-i18n="presets.label">Poses Predefinidas</span></span>
+        </div>
+        <div class="card-body" id="controls">
+          <select id="dataSelector" style="margin-bottom: 8px;">
+            <option value="Set 1">Arms Open - Front View</option>
+            <option value="Set 2">Arms Open - Left View</option>
+            <option value="Set 3">Facing Left (512x512)</option>
+            <option value="Set 4">Facing Right - Left Leg Up(512x512)</option>
+            <option value="Set 5">Facing Right - Right Leg Up(512x512)</option>
+            <option value="Set 6">Facing Right (512x512)</option>
+            <option value="Set 7">Left Hand On Hip (512x512)</option>
+            <option value="Set 8">Squat - Front View</option>
+            <option value="Set 9">Squat - Left Side View</option>
+            <option value="Set 10">Squat - Right Side View</option>
+            <option value="Set 11">Standing - Arms Out</option>
+            <option value="Set 12" selected>Standing - Front View (512x512)</option>
+            <option value="Set 13">Standing - Front View (512x512)Left</option>
+            <option value="Set 14">Standing - Front View (512x512)LeftRight</option>
+            <option value="Set 15">Standing - Front View (512x512)Right</option>
+            <option value="Set 16">Standing - Front View (512x768)</option>
+            <option value="Set 17">Standing - Front View (1024x1024)</option>
+            <option value="Set 18">Standing - Right Hand On Hip (512x512)</option>
+            <option value="Set 19">Standing - Right Hand On Hip 2 (512x512)</option>
+            <option value="Set 20">Walking - Left Side View</option>
+          </select>
+          <button class="btn btn-primary" style="width: 100%;" onclick="loadSelectedData()" data-i18n="presets.loadBtn">
+            📂 Cargar Pose
+          </button>
+        </div>
+      </div>
+
+      <!-- Card: Archivo JSON -->
+      <div class="card">
+        <div class="card-header">
+          <span>💾 <span data-i18n="json.saveLabel">Guardar / Cargar JSON</span></span>
+        </div>
+        <div class="card-body">
+          <label for="fileInput" data-i18n="json.loadLabel" style="font-size: 0.76rem;">Cargar archivo JSON:</label>
+          <input type="file" id="fileInput" accept=".json" style="margin-bottom: 8px; font-size: 0.75rem;" />
+          <button class="btn btn-secondary" style="width: 100%;" onclick="saveDataAsJSON()" data-i18n="json.saveBtn">
+            💾 Guardar JSON
+          </button>
+        </div>
+      </div>
+
+      <!-- Card: Desplazamiento (Joystick / D-Pad) -->
+      <div class="card" id="joystick">
+        <div class="card-header">
+          <span>🎮 <span data-i18n="joystick.shiftLabel">Mover Esqueleto</span></span>
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <span style="font-size: 0.72rem; color: #94a3b8;">Paso:</span>
+            <input type="number" id="shiftAmount" value="10" min="1" max="100" style="width: 45px; padding: 2px 4px; font-size: 0.75rem; text-align: center;" />
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="dpad-container">
+            <button class="dpad-btn" onclick="shiftNodes(0, -1)" data-i18n-title="joystick.up" title="Mover hacia arriba">▲</button>
+            <div class="dpad-row">
+              <button class="dpad-btn" onclick="shiftNodes(-1, 0)" data-i18n-title="joystick.left" title="Mover hacia la izquierda">◀</button>
+              <div style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: #475569;">❖</div>
+              <button class="dpad-btn" onclick="shiftNodes(1, 0)" data-i18n-title="joystick.right" title="Mover hacia la derecha">▶</button>
+            </div>
+            <button class="dpad-btn" onclick="shiftNodes(0, 1)" data-i18n-title="joystick.down" title="Mover hacia abajo">▼</button>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- ========================================== -->
+    <!-- COLUMNA CENTRAL: Lienzo y Herramientas    -->
+    <!-- ========================================== -->
+    <section class="panel-center">
+      
+      <!-- Toolbar Superior: Modo Hueso y Selección -->
+      <div class="canvas-toolbar-top" style="max-width: 530px;">
+        <!-- Toggle Modo Hueso -->
+        <button id="btnToggleBoneMode" onclick="toggleBoneMode()" class="btn btn-secondary" style="font-weight: bold; background: #132238; border-color: #24416b;" title="Al mover una articulación se mueve toda la extremidad en cadena">
+          <span id="boneModeText" data-i18n="tools.boneModeOff">🦴 Modo Hueso: DESACTIVADO</span>
+        </button>
+
+        <!-- Herramientas de Selección y Escalado -->
+        <div style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
+          <span id="selectionBadge" class="badge badge-status" style="font-size: 0.72rem;">0 seleccionados</span>
+          <button class="btn btn-secondary" style="padding: 3px 7px; font-size: 0.75rem;" onclick="selectAllNodes()" data-i18n="tools.selectAll">Todos</button>
+          <button class="btn btn-secondary" style="padding: 3px 7px; font-size: 0.75rem;" onclick="clearSelectedNodes()" data-i18n="tools.clearSelection">Limpiar</button>
+          <button class="btn btn-secondary" style="padding: 3px 7px; font-size: 0.75rem;" onclick="scaleSelection(1.1)" data-i18n-title="tools.scaleUp" title="Agrandar (+10%)">🔍+ 1.1x</button>
+          <button class="btn btn-secondary" style="padding: 3px 7px; font-size: 0.75rem;" onclick="scaleSelection(0.9)" data-i18n-title="tools.scaleDown" title="Achicar (-10%)">🔍- 0.9x</button>
+          <button class="btn btn-success" style="padding: 3px 7px; font-size: 0.75rem;" onclick="fitSelectionToCanvas()" data-i18n-title="tools.fitCanvas" title="Ajustar al lienzo">⛶ Ajustar</button>
+        </div>
+      </div>
+
+      <!-- Lienzo Principal OpenPose -->
+      <div class="canvas-viewport-box">
+        <canvas id="canvas" width="512" height="512"></canvas>
+      </div>
+
+      <!-- Tip de ayuda -->
+      <div style="font-size: 0.74rem; color: #94a3b8; text-align: center; max-width: 512px; line-height: 1.3;">
+        <span data-i18n="tools.canvasTip">💡 Arrastra el fondo para seleccionar puntos. Tira de las orillas del recuadro para ESCALAR. Activa Modo Hueso para mover extremidades.</span>
+      </div>
+
+      <!-- Barra de Controles de Guía Traslúcida y Exportar -->
+      <div style="width: 100%; max-width: 530px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; background: var(--bg-card); border: 1px solid var(--border-card); border-radius: var(--radius-md); padding: 8px 12px;">
+        <div style="display: flex; align-items: center; gap: 10px; font-size: 0.8rem;">
+          <label style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 6px; color: #e2e8f0;">
+            <input type="checkbox" id="aiShowGuide" onchange="toggleGuide(this.checked)" style="cursor: pointer;" />
+            <span data-i18n="ai.showGuideLabel">Guía de fondo</span>
+          </label>
+          <span style="color: #334155;">|</span>
+          <label style="margin: 0; display: flex; align-items: center; gap: 6px; color: #94a3b8;">
+            <span data-i18n="ai.guideOpacityLabel">Opacidad:</span>
+            <input type="range" id="aiGuideOpacity" min="0.05" max="1" step="0.05" value="0.4" oninput="updateGuideOpacity(this.value)" style="width: 70px; cursor: pointer;" />
+            <span id="aiGuideOpacityVal" style="font-size: 0.75rem; color: #38bdf8; font-weight: bold;">40%</span>
+          </label>
+        </div>
+
+        <button class="btn btn-primary" onclick="exportCanvas()" data-i18n="export.exportBtn">
+          📸 Exportar PNG
+        </button>
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- COLUMNA DERECHA: Estudio de IA MoveNet    -->
+    <!-- ========================================== -->
+    <aside class="panel-sidebar-right">
+      
+      <div class="card" style="box-shadow: 0 4px 25px rgba(2, 132, 199, 0.15);">
+        <div class="card-header" style="background: linear-gradient(135deg, #111e38, #182747);">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span>🤖</span>
+            <span data-i18n="ai.panelTitle">Estudio de IA (MoveNet)</span>
+          </div>
+          <span id="aiStatus" class="badge badge-status" data-i18n="ai.statusReady">Listo</span>
+        </div>
+
+        <div class="card-body">
+          <!-- Selector de Archivo -->
+          <div style="margin-bottom: 12px;">
+            <label data-i18n="ai.selectMediaLabel">Cargar Imagen o Video:</label>
+            <input type="file" id="aiMediaInput" accept="image/*,video/*" onchange="handleMediaSelected(this.files[0])" />
+          </div>
+
+          <!-- Selector de Modelo IA -->
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <span style="font-size: 0.8rem; color: #94a3b8;" data-i18n="ai.modelTypeLabel">Modelo IA:</span>
+            <select id="aiModelType" onchange="changeModelType(this.value)" style="width: auto; padding: 4px 8px;">
+              <option value="thunder" selected data-i18n="ai.modelThunder">MoveNet Thunder (Alta Precisión)</option>
+              <option value="lightning" data-i18n="ai.modelLightning">MoveNet Lightning (Ultra Rápido)</option>
+            </select>
+          </div>
+
+          <!-- Botón Principal: Detección Instantánea -->
+          <button id="btnConvertPose" class="btn-ai" onclick="executePoseConversion()" disabled data-i18n="ai.convertBtn">
+            ⚡ Detectar Pose y Cargar al Editor
+          </button>
+
+          <!-- Vista Previa de Imagen -->
+          <div id="aiImageContainer" class="ai-preview-box" style="display: none;">
+            <img id="aiPreviewImage" src="" alt="Preview" style="max-width: 100%; max-height: 260px; object-fit: contain; border-radius: 4px;" />
+          </div>
+
+          <!-- Vista Previa y Controles de Video -->
+          <div id="aiVideoContainer" class="ai-preview-box" style="display: none;">
+            <video id="aiPreviewVideo" style="max-width: 100%; max-height: 220px; border-radius: 4px; background: #000;" playsinline></video>
+            
+            <!-- Scrubber / Timeline de Video -->
+            <div style="margin-top: 8px;">
+              <input type="range" id="aiVideoSlider" min="0" max="100" step="0.01" value="0" style="width: 98%; cursor: pointer;" oninput="onVideoSliderInput(this.value)" />
+              <div id="aiVideoTimeDisplay" style="font-size: 0.8rem; color: #38bdf8; font-family: monospace; margin-top: 2px;">00:00.00 / 00:00.00</div>
+            </div>
+
+            <!-- Controles Frame a Frame -->
+            <div class="video-timeline-controls">
+              <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="stepVideo(-1)" data-i18n="ai.prevFrame">⏮ -1 Frame</button>
+              <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="togglePlayVideo()" id="btnPlayPause">⏯ Play / Pausa</button>
+              <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="stepVideo(1)" data-i18n="ai.nextFrame">+1 Frame ⏭</button>
+              <button class="btn btn-primary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="captureCurrentKeyframe()" data-i18n="ai.captureKeyframeBtn">📸 Guardar Keyframe</button>
+            </div>
+
+            <!-- Selección de Rango y Extracción de Keyframes -->
+            <div style="margin-top: 10px; padding: 10px; background: #111a2e; border-radius: 6px; border: 1px solid #1e2c45;">
+              <div style="font-size: 0.8rem; font-weight: bold; margin-bottom: 6px; color: #38bdf8;" data-i18n="ai.rangeLabel">
+                Seleccionar Rango de Video (Inicio / Fin):
+              </div>
+              <div style="display: flex; gap: 6px; justify-content: center; align-items: center; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <span style="font-size: 0.74rem; color: #94a3b8;">Inicio:</span>
+                  <input type="number" id="aiRangeStart" step="0.1" min="0" style="width: 55px; padding: 3px;" onchange="updateRangeValues()" />
+                  <button class="btn btn-secondary" style="padding: 3px 6px; font-size: 0.74rem;" onclick="markRangeStart()" data-i18n="ai.setStartBtn">📍 Inicio</button>
+                </div>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <span style="font-size: 0.74rem; color: #94a3b8;">Fin:</span>
+                  <input type="number" id="aiRangeEnd" step="0.1" min="0" style="width: 55px; padding: 3px;" onchange="updateRangeValues()" />
+                  <button class="btn btn-secondary" style="padding: 3px 6px; font-size: 0.74rem;" onclick="markRangeEnd()" data-i18n="ai.setEndBtn">📍 Fin</button>
+                </div>
+              </div>
+              <button class="btn btn-secondary" style="width: 100%; margin-top: 8px; background: #163628; border-color: #245840; color: #34d399;" onclick="extractRangeKeyframes(5)" data-i18n="ai.extractRangeBtn">
+                ✂ Extraer 5 Keyframes en este Rango
+              </button>
+            </div>
+
+            <!-- Tira de Keyframes Seleccionados -->
+            <div style="margin-top: 10px; text-align: left;">
+              <div style="font-size: 0.8rem; font-weight: bold; color: #38bdf8; margin-bottom: 4px;" data-i18n="ai.keyframesListTitle">
+                Keyframes Seleccionados:
+              </div>
+              <div id="aiKeyframeStrip" class="keyframe-strip">
+                <span style="font-size: 0.75rem; color: #64748b;" data-i18n="ai.noKeyframes">No hay keyframes seleccionados aún.</span>
+              </div>
+            </div>
+
+            <!-- Panel de Generación de Video OpenPose Frame a Frame -->
+            <div style="margin-top: 12px; padding: 12px; background: #0c1527; border-radius: 8px; border: 1px solid #1c2b45; text-align: left;">
+              <div style="font-size: 0.84rem; font-weight: 700; color: #38bdf8; margin-bottom: 8px;">
+                <span data-i18n="ai.videoGenTitle">🎬 Generar Video Completo a OpenPose (Fondo Negro):</span>
+              </div>
+              
+              <!-- Opciones de Generación de Video -->
+              <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; font-size: 0.78rem;">
+                <label style="display: flex; align-items: center; gap: 4px; margin: 0; cursor: pointer; color: #cbd5e1;">
+                  <input type="radio" name="aiVideoScope" id="aiVideoScopeFull" value="full" checked style="cursor: pointer;" />
+                  <span data-i18n="ai.scopeFull">Todo el video</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 4px; margin: 0; cursor: pointer; color: #cbd5e1;">
+                  <input type="radio" name="aiVideoScope" id="aiVideoScopeRange" value="range" style="cursor: pointer;" />
+                  <span data-i18n="ai.scopeRange">Solo rango</span>
+                </label>
+                <div style="display: flex; align-items: center; gap: 4px; margin-left: auto;">
+                  <span data-i18n="ai.fpsLabel" style="color: #94a3b8;">FPS:</span>
+                  <select id="aiVideoFps" style="padding: 2px 6px; font-size: 0.74rem; border-radius: 4px; margin: 0; width: auto;">
+                    <option value="15">15 FPS</option>
+                    <option value="24" selected>24 FPS</option>
+                    <option value="30">30 FPS</option>
+                  </select>
+                  <span data-i18n="ai.formatLabel" style="margin-left: 6px; color: #94a3b8;">Formato:</span>
+                  <select id="aiVideoFormat" style="padding: 2px 6px; font-size: 0.74rem; border-radius: 4px; margin: 0; width: auto;">
+                    <option value="mp4" selected>MP4 (H.264)</option>
+                    <option value="webm">WebM (VP9)</option>
+                    <option value="mkv">MKV (Matroska)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Botón de Iniciar Proceso -->
+              <button id="btnStartVideoProcessing" class="btn btn-primary" style="width: 100%; font-size: 0.88rem; padding: 8px 12px;" onclick="startFullVideoProcessing()">
+                <span data-i18n="ai.btnStartVideoProcess">🎬 Procesar y Descargar Video OpenPose</span>
+              </button>
+
+              <!-- Barra de Progreso y Estado de Procesamiento -->
+              <div id="aiVideoProgressBox" style="display: none; margin-top: 10px; background: #080e1a; padding: 10px; border-radius: 6px; border: 1px solid #1a283e;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 5px;">
+                  <span id="aiVideoProgressStage" style="color: #fbbf24; font-weight: 600;">Analizando frames...</span>
+                  <span id="aiVideoProgressPercent" style="color: #38bdf8; font-weight: bold;">0%</span>
+                </div>
+                <!-- Barra visual de progreso -->
+                <div style="background: #172236; border-radius: 6px; height: 10px; overflow: hidden; width: 100%;">
+                  <div id="aiVideoProgressBar" style="background: linear-gradient(90deg, #0284c7, #10b981); width: 0%; height: 100%; transition: width 0.15s;"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+                  <span id="aiVideoProgressCount" style="font-size: 0.72rem; color: #94a3b8;">Frame 0 / 0</span>
+                  <button class="btn btn-danger" style="padding: 2px 8px; font-size: 0.72rem;" onclick="cancelVideoProcessing()" data-i18n="ai.btnCancel">⏹ Cancelar</button>
+                </div>
+              </div>
+
+              <!-- Resultado y Descarga de Video -->
+              <div id="aiVideoResultBox" style="display: none; margin-top: 10px; background: #0c2016; padding: 10px; border-radius: 6px; border: 1px solid #164e32;">
+                <div style="font-size: 0.82rem; font-weight: bold; color: #34d399; margin-bottom: 6px;">
+                  <span data-i18n="ai.videoSuccess">✅ ¡Video OpenPose generado con éxito!</span>
+                </div>
+                <video id="aiOutputVideoPreview" controls loop style="width: 100%; max-height: 200px; border-radius: 4px; background: #000; margin-bottom: 8px;"></video>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                  <button class="btn btn-success" style="flex: 1; font-weight: bold;" onclick="downloadGeneratedVideo()">
+                    <span id="btnDownloadVideoText" data-i18n="ai.btnDownloadVideo">📥 Descargar Video</span>
+                  </button>
+                  <button class="btn btn-secondary" onclick="downloadPoseSequenceJSON()" data-i18n="ai.btnDownloadJSON">
+                    💾 Poses JSON
+                  </button>
+                </div>
+                <!-- Tip de Exportación ProRes / FFmpeg -->
+                <div style="margin-top: 8px; font-size: 0.72rem; color: #34d399; background: #06150e; padding: 6px 8px; border-radius: 4px; border: 1px dashed #1b5333;">
+                  🎬 <b>¿Apple ProRes (.mov) para Premiere / DaVinci Resolve?</b><br>
+                  <span style="color: #94a3b8;">Para convertir a ProRes 422 HQ en 1 segundo con FFmpeg:</span>
+                  <code style="background: #000; color: #34d399; padding: 3px 6px; border-radius: 3px; display: block; margin-top: 4px; font-family: monospace; word-break: break-all;">ffmpeg -i openpose-video.mp4 -c:v prores_ks -profile:v 3 openpose-prores.mov</code>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </aside>
+
+  </main>
+
+    <!-- Modern App Footer -->
+  <footer class="app-footer">
+    <div class="footer-author-box">
+      <img src="humberto_cisneros.jpg" alt="Juan Humberto Cisneros Rodríguez" class="footer-avatar" />
+      <div class="footer-author-info">
+        <div class="footer-author-header">
+          <span class="footer-author-name">Juan Humberto Cisneros Rodríguez</span>
+          <span class="footer-divider">•</span>
+          <a href="https://humbertocisneros.myportfolio.com/" target="_blank" rel="noopener noreferrer" class="footer-portfolio-link" title="Ver Portafolio Profesional">
+            <span>🌐</span> <span data-i18n="footer.portfolio">Portafolio</span>
+          </a>
+          <span class="footer-divider">•</span>
+          <a href="https://github.com/humbertoslpmx/OpenPoseFree" target="_blank" rel="noopener noreferrer" class="footer-github-link" title="Repositorio en GitHub">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: -2px;"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> <span>GitHub</span>
+          </a>
+          <span class="footer-divider">•</span>
+          <a href="https://buymeacoffee.com/humbertocisneros" target="_blank" rel="noopener noreferrer" class="footer-donation-link" title="Invitar un café">
+            <span>☕</span> <span data-i18n="footer.donate">Donar</span>
+          </a>
+        </div>
+        <p class="footer-author-msg" data-i18n="footer.freeMsg">
+          Software libre y gratuito: siéntete libre de utilizarlo en tus proyectos personales y comerciales. Si te resulta útil, considera apoyar su desarrollo continuo con una donación.
+        </p>
+      </div>
+    </div>
+    <div class="footer-credits">
+      <span>OpenPoseFree Standard Edition • MoveNet</span>
+      <span style="color: #475569;">Basado en el proyecto original de Rock Stevens (MIT License)</span>
+    </div>
+  </footer>
+
+  <!-- Helper Script for UI Interactivity (Quick Guide & Canvas Presets) -->
+  <script>
+    function toggleQuickGuide() {
+      const banner = document.getElementById('quickGuideBanner');
+      if (banner) {
+        banner.style.display = banner.style.display === 'block' ? 'none' : 'block';
+      }
+    }
+
+    function setPresetCanvasSize(size) {
+      const sel = document.getElementById('canvasSizeSelector');
+      if (sel) {
+        sel.value = size;
+        if (typeof updateCanvasSize === 'function') {
+          updateCanvasSize();
+        }
+      }
+    }
+  </script>
+
+<!-- Include OpenPose Presets -->
+<script>
+//
+// filename: builtin_datasets.js
+// desc: OpenPose JSON Poses for Rock's Simple OpenPose Editor
+//
+
+// --- Arms Open - Front View dataset ---------------------------------------
+const dataSet1 = {
+  "nodes": [
+    { "x": 256, "y": 100, "color": "#FF0000" },
+    { "x": 256, "y": 130, "color": "#FF5500" },
+    { "x": 206, "y": 130, "color": "#FFAA00" },
+    { "x": 176, "y": 120, "color": "#FFFF00" },
+    { "x": 146, "y": 130, "color": "#AAFF00" },
+    { "x": 306, "y": 130, "color": "#55FF00" },
+    { "x": 336, "y": 120, "color": "#00FF00" },
+    { "x": 366, "y": 130, "color": "#00FF55" },
+    { "x": 236, "y": 180, "color": "#00FFAA" },
+    { "x": 236, "y": 240, "color": "#00FFFF" },
+    { "x": 226, "y": 290, "color": "#00AAFF" },
+    { "x": 276, "y": 180, "color": "#0055FF" },
+    { "x": 276, "y": 240, "color": "#0000FF" },
+    { "x": 286, "y": 290, "color": "#5500FF" },
+    { "x": 248, "y": 90, "color": "#AA00FF" },
+    { "x": 264, "y": 90, "color": "#FF00FF" },
+    { "x": 246, "y": 96, "color": "#FF00AA" },
+    { "x": 266, "y": 96, "color": "#FF0055" }
+  ],
+  "lines": [
+    { "start": 0, "end": 1, "color": "#FF0000" },
+    { "start": 1, "end": 2, "color": "#FF5500" },
+    { "start": 2, "end": 3, "color": "#FFAA00" },
+    { "start": 3, "end": 4, "color": "#FFFF00" },
+    { "start": 1, "end": 5, "color": "#FF5500" },
+    { "start": 5, "end": 6, "color": "#55FF00" },
+    { "start": 6, "end": 7, "color": "#00FF00" },
+    { "start": 1, "end": 8, "color": "#00FFAA" },
+    { "start": 8, "end": 9, "color": "#00FFFF" },
+    { "start": 9, "end": 10, "color": "#00AAFF" },
+    { "start": 1, "end": 11, "color": "#0055FF" },
+    { "start": 11, "end": 12, "color": "#0000FF" },
+    { "start": 12, "end": 13, "color": "#5500FF" },
+    { "start": 0, "end": 14, "color": "#AA00FF" },
+    { "start": 0, "end": 15, "color": "#FF00FF" },
+    { "start": 14, "end": 16, "color": "#FF00AA" },
+    { "start": 15, "end": 17, "color": "#FF0055" }
+  ]
+}
+;
+
+
+// --- Arms Open - Left View dataset ---------------------------------------
+const dataSet2 = {
+  "nodes": [
+    {
+      "x": 254.01666259765625,
+      "y": 100,
+      "color": "#FF0000"
+    },
+    {
+      "x": 258.18333435058594,
+      "y": 128.6666717529297,
+      "color": "#FF5500"
+    },
+    {
+      "x": 238.18333435058594,
+      "y": 123.66667175292969,
+      "color": "#FFAA00"
+    },
+    {
+      "x": 221.18333435058594,
+      "y": 123.66667175292969,
+      "color": "#FFFF00"
+    },
+    {
+      "x": 206.18333435058594,
+      "y": 130.6666717529297,
+      "color": "#AAFF00"
+    },
+    {
+      "x": 277.18333435058594,
+      "y": 130.6666717529297,
+      "color": "#55FF00"
+    },
+    {
+      "x": 291.3500061035156,
+      "y": 139.5,
+      "color": "#00FF00"
+    },
+    {
+      "x": 278.18333435058594,
+      "y": 146.6666717529297,
+      "color": "#00FF55"
+    },
+    {
+      "x": 256,
+      "y": 180,
+      "color": "#00FFAA"
+    },
+    {
+      "x": 246,
+      "y": 240,
+      "color": "#00FFFF"
+    },
+    {
+      "x": 236,
+      "y": 290,
+      "color": "#00AAFF"
+    },
+    {
+      "x": 266,
+      "y": 180,
+      "color": "#0055FF"
+    },
+    {
+      "x": 266,
+      "y": 240,
+      "color": "#0000FF"
+    },
+    {
+      "x": 266,
+      "y": 290,
+      "color": "#5500FF"
+    },
+    {
+      "x": 250,
+      "y": 90,
+      "color": "#AA00FF"
+    },
+    {
+      "x": 258.01666259765625,
+      "y": 90,
+      "color": "#FF00FF"
+    },
+    {
+      "x": 242.01666259765625,
+      "y": 94,
+      "color": "#FF00AA"
+    },
+    {
+      "x": 265.01666259765625,
+      "y": 95,
+      "color": "#FF0055"
+    }
+  ],
+  "lines": [
+    {
+      "start": 0,
+      "end": 1,
+      "color": "#FF0000"
+    },
+    {
+      "start": 1,
+      "end": 2,
+      "color": "#FF5500"
+    },
+    {
+      "start": 2,
+      "end": 3,
+      "color": "#FFAA00"
+    },
+    {
+      "start": 3,
+      "end": 4,
+      "color": "#FFFF00"
+    },
+    {
+      "start": 1,
+      "end": 5,
+      "color": "#FF5500"
+    },
+    {
+      "start": 5,
+      "end": 6,
+      "color": "#55FF00"
+    },
+    {
+      "start": 6,
+      "end": 7,
+      "color": "#00FF00"
+    },
+    {
+      "start": 1,
+      "end": 8,
+      "color": "#00FFAA"
+    },
+    {
+      "start": 8,
+      "end": 9,
+      "color": "#00FFFF"
+    },
+    {
+      "start": 9,
+      "end": 10,
+      "color": "#00AAFF"
+    },
+    {
+      "start": 1,
+      "end": 11,
+      "color": "#0055FF"
+    },
+    {
+      "start": 11,
+      "end": 12,
+      "color": "#0000FF"
+    },
+    {
+      "start": 12,
+      "end": 13,
+      "color": "#5500FF"
+    },
+    {
+      "start": 0,
+      "end": 14,
+      "color": "#AA00FF"
+    },
+    {
+      "start": 0,
+      "end": 15,
+      "color": "#FF00FF"
+    },
+    {
+      "start": 14,
+      "end": 16,
+      "color": "#FF00AA"
+    },
+    {
+      "start": 15,
+      "end": 17,
+      "color": "#FF0055"
+    }
+  ]
+};
+
+
+// --- Facing Left (512x512) dataset ---------------------------------------
+const dataSet3 = {
+  "nodes": [
+    {
+      "x": 251.5333251953125,
+      "y": 118,
+      "color": "#ff0000"
+    },
+    {
+      "x": 244,
+      "y": 169.13333129882812,
+      "color": "#ff5500"
+    },
+    {
+      "x": 225.5333251953125,
+      "y": 186,
+      "color": "#ffaa00"
+    },
+    {
+      "x": 217.5333251953125,
+      "y": 229,
+      "color": "#ffff00"
+    },
+    {
+      "x": 229.5333251953125,
+      "y": 272,
+      "color": "#aaff00"
+    },
+    {
+      "x": 261.5333251953125,
+      "y": 155,
+      "color": "#55ff00"
+    },
+    {
+      "x": 271.6000061035156,
+      "y": 206,
+      "color": "#00ff00"
+    },
+    {
+      "x": 266.6000061035156,
+      "y": 251,
+      "color": "#00ff55"
+    },
+    {
+      "x": 235.5333251953125,
+      "y": 287,
+      "color": "#00ffaa"
+    },
+    {
+      "x": 255.5333251953125,
+      "y": 269,
+      "color": "#0055ff"
+    },
+    {
+      "x": 237.5333251953125,
+      "y": 354,
+      "color": "#00ffff"
+    },
+    {
+      "x": 239.5333251953125,
+      "y": 403,
+      "color": "#00aaff"
+    },
+    {
+      "x": 264.5333251953125,
+      "y": 330,
+      "color": "#0000ff"
+    },
+    {
+      "x": 270.5333251953125,
+      "y": 374,
+      "color": "#5500ff"
+    },
+    {
+      "x": 242.5333251953125,
+      "y": 107,
+      "color": "#aa00ff"
+    },
+    {
+      "x": 254.5333251953125,
+      "y": 104,
+      "color": "#ff00ff"
+    },
+    {
+      "x": 235.5333251953125,
+      "y": 114,
+      "color": "#ff00aa"
+    },
+    {
+      "x": 262.5333251953125,
+      "y": 105,
+      "color": "#ff0055"
+    }
+  ],
+  "lines": [
+    {
+      "start": 14,
+      "end": 16,
+      "color": "#660099"
+    },
+    {
+      "start": 0,
+      "end": 14,
+      "color": "#330099"
+    },
+    {
+      "start": 0,
+      "end": 15,
+      "color": "#990099"
+    },
+    {
+      "start": 15,
+      "end": 17,
+      "color": "#990066"
+    },
+    {
+      "start": 0,
+      "end": 1,
+      "color": "#000066"
+    },
+    {
+      "start": 1,
+      "end": 2,
+      "color": "#990000"
+    },
+    {
+      "start": 2,
+      "end": 3,
+      "color": "#996600"
+    },
+    {
+      "start": 3,
+      "end": 4,
+      "color": "#999900"
+    },
+    {
+      "start": 1,
+      "end": 8,
+      "color": "#009900"
+    },
+    {
+      "start": 1,
+      "end": 9,
+      "color": "#009999"
+    },
+    {
+      "start": 8,
+      "end": 10,
+      "color": "#009933"
+    },
+    {
+      "start": 10,
+      "end": 11,
+      "color": "#009966"
+    },
+    {
+      "start": 9,
+      "end": 12,
+      "color": "#006699"
+    },
+    {
+      "start": 12,
+      "end": 13,
+      "color": "#003399"
+    },
+    {
+      "start": 1,
+      "end": 5,
+      "color": "#993300"
+    },
+    {
+      "start": 5,
+      "end": 6,
+      "color": "#669900"
+    },
+    {
+      "start": 6,
+      "end": 7,
+      "color": "#339900"
+    }
+  ]
+};
+
+
+// --- Facing Right - Left Leg Up(512x512) dataset ---------------------------------------
+const dataSet4 = {
+  "nodes": [
+    {
+      "x": 244.60000610351562,
+      "y": 117,
+      "color": "#ff0000"
+    },
+    {
+      "x": 244,
+      "y": 169.13333129882812,
+      "color": "#ff5500"
+    },
+    {
+      "x": 223.60000610351562,
+      "y": 157,
+      "color": "#ffaa00"
+    },
+    {
+      "x": 216.60000610351562,
+      "y": 204,
+      "color": "#ffff00"
+    },
+    {
+      "x": 221.60000610351562,
+      "y": 243,
+      "color": "#aaff00"
+    },
+    {
+      "x": 265.6000061035156,
+      "y": 181,
+      "color": "#55ff00"
+    },
+    {
+      "x": 248.60000610351562,
+      "y": 234,
+      "color": "#00ff00"
+    },
+    {
+      "x": 208.60000610351562,
+      "y": 264,
+      "color": "#00ff55"
+    },
+    {
+      "x": 231.60000610351562,
+      "y": 266,
+      "color": "#00ffaa"
+    },
+    {
+      "x": 258.6000061035156,
+      "y": 279,
+      "color": "#0055ff"
+    },
+    {
+      "x": 227.60000610351562,
+      "y": 323,
+      "color": "#00ffff"
+    },
+    {
+      "x": 224.60000610351562,
+      "y": 380,
+      "color": "#00aaff"
+    },
+    {
+      "x": 215.60000610351562,
+      "y": 229,
+      "color": "#0000ff"
+    },
+    {
+      "x": 208.60000610351562,
+      "y": 314,
+      "color": "#5500ff"
+    },
+    {
+      "x": 244.60000610351562,
+      "y": 104,
+      "color": "#aa00ff"
+    },
+    {
+      "x": 255.60000610351562,
+      "y": 109,
+      "color": "#ff00ff"
+    },
+    {
+      "x": 235.60000610351562,
+      "y": 106,
+      "color": "#ff00aa"
+    },
+    {
+      "x": 261.6000061035156,
+      "y": 115,
+      "color": "#ff0055"
+    }
+  ],
+  "lines": [
+    {
+      "start": 14,
+      "end": 16,
+      "color": "#660099"
+    },
+    {
+      "start": 0,
+      "end": 14,
+      "color": "#330099"
+    },
+    {
+      "start": 0,
+      "end": 15,
+      "color": "#990099"
+    },
+    {
+      "start": 15,
+      "end": 17,
+      "color": "#990066"
+    },
+    {
+      "start": 0,
+      "end": 1,
+      "color": "#000066"
+    },
+    {
+      "start": 1,
+      "end": 2,
+      "color": "#990000"
+    },
+    {
+      "start": 2,
+      "end": 3,
+      "color": "#996600"
+    },
+    {
+      "start": 3,
+      "end": 4,
+      "color": "#999900"
+    },
+    {
+      "start": 1,
+      "end": 8,
+      "color": "#009900"
+    },
+    {
+      "start": 1,
+      "end": 9,
+      "color": "#009999"
+    },
+    {
+      "start": 8,
+      "end": 10,
+      "color": "#009933"
+    },
+    {
+      "start": 10,
+      "end": 11,
+      "color": "#009966"
+    },
+    {
+      "start": 9,
+      "end": 12,
+      "color": "#006699"
+    },
+    {
+      "start": 12,
+      "end": 13,
+      "color": "#003399"
+    },
+    {
+      "start": 1,
+      "end": 5,
+      "color": "#993300"
+    },
+    {
+      "start": 5,
+      "end": 6,
+      "color": "#669900"
+    },
+    {
+      "start": 6,
+      "end": 7,
+      "color": "#339900"
+    }
+  ]
+};
+
+
+// --- Facing Right - Right Leg Up(512x512) dataset ---------------------------------------
+const dataSet5 = {
+  "nodes": [
+    {
+      "x": 244.60000610351562,
+      "y": 117,
+      "color": "#ff0000"
+    },
+    {
+      "x": 244,
+      "y": 169.13333129882812,
+      "color": "#ff5500"
+    },
+    {
+      "x": 223.60000610351562,
+      "y": 157,
+      "color": "#ffaa00"
+    },
+    {
+      "x": 204.683349609375,
+      "y": 206,
+      "color": "#ffff00"
+    },
+    {
+      "x": 183.683349609375,
+      "y": 246,
+      "color": "#aaff00"
+    },
+    {
+      "x": 265.6000061035156,
+      "y": 181,
+      "color": "#55ff00"
+    },
+    {
+      "x": 272.6000061035156,
+      "y": 225,
+      "color": "#00ff00"
+    },
+    {
+      "x": 269.6000061035156,
+      "y": 268,
+      "color": "#00ff55"
+    },
+    {
+      "x": 231.60000610351562,
+      "y": 266,
+      "color": "#00ffaa"
+    },
+    {
+      "x": 257.6000061035156,
+      "y": 286,
+      "color": "#0055ff"
+    },
+    {
+      "x": 190.683349609375,
+      "y": 218,
+      "color": "#00ffff"
+    },
+    {
+      "x": 195.683349609375,
+      "y": 312,
+      "color": "#00aaff"
+    },
+    {
+      "x": 260.6000061035156,
+      "y": 351,
+      "color": "#0000ff"
+    },
+    {
+      "x": 259.6000061035156,
+      "y": 401,
+      "color": "#5500ff"
+    },
+    {
+      "x": 244.60000610351562,
+      "y": 104,
+      "color": "#aa00ff"
+    },
+    {
+      "x": 255.60000610351562,
+      "y": 109,
+      "color": "#ff00ff"
+    },
+    {
+      "x": 235.60000610351562,
+      "y": 106,
+      "color": "#ff00aa"
+    },
+    {
+      "x": 261.6000061035156,
+      "y": 115,
+      "color": "#ff0055"
+    }
+  ],
+  "lines": [
+    {
+      "start": 14,
+      "end": 16,
+      "color": "#660099"
+    },
+    {
+      "start": 0,
+      "end": 14,
+      "color": "#330099"
+    },
+    {
+      "start": 0,
+      "end": 15,
+      "color": "#990099"
+    },
+    {
+      "start": 15,
+      "end": 17,
+      "color": "#990066"
+    },
+    {
+      "start": 0,
+      "end": 1,
+      "color": "#000066"
+    },
+    {
+      "start": 1,
+      "end": 2,
+      "color": "#990000"
+    },
+    {
+      "start": 2,
+      "end": 3,
+      "color": "#996600"
+    },
+    {
+      "start": 3,
+      "end": 4,
+      "color": "#999900"
+    },
+    {
+      "start": 1,
+      "end": 8,
+      "color": "#009900"
+    },
+    {
+      "start": 1,
+      "end": 9,
+      "color": "#009999"
+    },
+    {
+      "start": 8,
+      "end": 10,
+      "color": "#009933"
+    },
+    {
+      "start": 10,
+      "end": 11,
+      "color": "#009966"
+    },
+    {
+      "start": 9,
+      "end": 12,
+      "color": "#006699"
+    },
+    {
+      "start": 12,
+      "end": 13,
+      "color": "#003399"
+    },
+    {
+      "start": 1,
+      "end": 5,
+      "color": "#993300"
+    },
+    {
+      "start": 5,
+      "end": 6,
+      "color": "#669900"
+    },
+    {
+      "start": 6,
+      "end": 7,
+      "color": "#339900"
+    }
+  ]
+};
+
+
+// --- Facing Right (512x512) dataset ---------------------------------------
+const dataSet6 = {
+  "nodes": [
+    {
+      "x": 244.60000610351562,
+      "y": 117,
+      "color": "#ff0000"
+    },
+    {
+      "x": 244,
+      "y": 169.13333129882812,
+      "color": "#ff5500"
+    },
+    {
+      "x": 223.60000610351562,
+      "y": 157,
+      "color": "#ffaa00"
+    },
+    {
+      "x": 216.60000610351562,
+      "y": 204,
+      "color": "#ffff00"
+    },
+    {
+      "x": 221.60000610351562,
+      "y": 243,
+      "color": "#aaff00"
+    },
+    {
+      "x": 265.6000061035156,
+      "y": 181,
+      "color": "#55ff00"
+    },
+    {
+      "x": 272.6000061035156,
+      "y": 225,
+      "color": "#00ff00"
+    },
+    {
+      "x": 269.6000061035156,
+      "y": 268,
+      "color": "#00ff55"
+    },
+    {
+      "x": 231.60000610351562,
+      "y": 266,
+      "color": "#00ffaa"
+    },
+    {
+      "x": 257.6000061035156,
+      "y": 286,
+      "color": "#0055ff"
+    },
+    {
+      "x": 227.60000610351562,
+      "y": 323,
+      "color": "#00ffff"
+    },
+    {
+      "x": 224.60000610351562,
+      "y": 380,
+      "color": "#00aaff"
+    },
+    {
+      "x": 260.6000061035156,
+      "y": 351,
+      "color": "#0000ff"
+    },
+    {
+      "x": 259.6000061035156,
+      "y": 401,
+      "color": "#5500ff"
+    },
+    {
+      "x": 244.60000610351562,
+      "y": 104,
+      "color": "#aa00ff"
+    },
+    {
+      "x": 255.60000610351562,
+      "y": 109,
+      "color": "#ff00ff"
+    },
+    {
+      "x": 235.60000610351562,
+      "y": 106,
+      "color": "#ff00aa"
+    },
+    {
+      "x": 261.6000061035156,
+      "y": 115,
+      "color": "#ff0055"
+    }
+  ],
+  "lines": [
+    {
+      "start": 14,
+      "end": 16,
+      "color": "#660099"
+    },
+    {
+      "start": 0,
+      "end": 14,
+      "color": "#330099"
+    },
+    {
+      "start": 0,
+      "end": 15,
+      "color": "#990099"
+    },
+    {
+      "start": 15,
+      "end": 17,
+      "color": "#990066"
+    },
+    {
+      "start": 0,
+      "end": 1,
+      "color": "#000066"
+    },
+    {
+      "start": 1,
+      "end": 2,
+      "color": "#990000"
+    },
+    {
+      "start": 2,
+      "end": 3,
+      "color": "#996600"
+    },
+    {
+      "start": 3,
+      "end": 4,
+      "color": "#999900"
+    },
+    {
+      "start": 1,
+      "end": 8,
+      "color": "#009900"
+    },
+    {
+      "start": 1,
+      "end": 9,
+      "color": "#009999"
+    },
+    {
+      "start": 8,
+      "end": 10,
+      "color": "#009933"
+    },
+    {
+      "start": 10,
+      "end": 11,
+      "color": "#009966"
+    },
+    {
+      "start": 9,
+      "end": 12,
+      "color": "#006699"
+    },
+    {
+      "start": 12,
+      "end": 13,
+      "color": "#003399"
+    },
+    {
+      "start": 1,
+      "end": 5,
+      "color": "#993300"
+    },
+    {
+      "start": 5,
+      "end": 6,
+      "color": "#669900"
+    },
+    {
+      "start": 6,
+      "end": 7,
+      "color": "#339900"
+    }
+  ]
+};
+
+
+// --- Left Hand On Hip (512x512) dataset ---------------------------------------
+const dataSet7 = {
+  "nodes": [
+    {
+      "x": 235.85000610351562,
+      "y": 105,
+      "color": "#ff0000"
+    },
+    {
+      "x": 234,
+      "y": 159.13333129882812,
+      "color": "#ff5500"
+    },
+    {
+      "x": 201,
+      "y": 159,
+      "color": "#ffaa00"
+    },
+    {
+      "x": 170.85000610351562,
+      "y": 216,
+      "color": "#ffff00"
+    },
+    {
+      "x": 181.85000610351562,
+      "y": 283,
+      "color": "#aaff00"
+    },
+    {
+      "x": 271,
+      "y": 166,
+      "color": "#55ff00"
+    },
+    {
+      "x": 301.683349609375,
+      "y": 215,
+      "color": "#00ff00"
+    },
+    {
+      "x": 266.683349609375,
+      "y": 260,
+      "color": "#00ff55"
+    },
+    {
+      "x": 213,
+      "y": 269,
+      "color": "#00ffaa"
+    },
+    {
+      "x": 260,
+      "y": 270,
+      "color": "#0055ff"
+    },
+    {
+      "x": 153.683349609375,
+      "y": 344,
+      "color": "#00ffff"
+    },
+    {
+      "x": 127.683349609375,
+      "y": 446,
+      "color": "#00aaff"
+    },
+    {
+      "x": 281.683349609375,
+      "y": 355,
+      "color": "#0000ff"
+    },
+    {
+      "x": 298.683349609375,
+      "y": 435,
+      "color": "#5500ff"
+    },
+    {
+      "x": 230.79998779296875,
+      "y": 94,
+      "color": "#aa00ff"
+    },
+    {
+      "x": 245.9666748046875,
+      "y": 95,
+      "color": "#ff00ff"
+    },
+    {
+      "x": 220.85000610351562,
+      "y": 97,
+      "color": "#ff00aa"
+    },
+    {
+      "x": 253.85000610351562,
+      "y": 102,
+      "color": "#ff0055"
+    }
+  ],
+  "lines": [
+    {
+      "start": 14,
+      "end": 16,
+      "color": "#660099"
+    },
+    {
+      "start": 0,
+      "end": 14,
+      "color": "#330099"
+    },
+    {
+      "start": 0,
+      "end": 15,
+      "color": "#990099"
+    },
+    {
+      "start": 15,
+      "end": 17,
+      "color": "#990066"
+    },
+    {
+      "start": 0,
+      "end": 1,
+      "color": "#000066"
+    },
+    {
+      "start": 1,
+      "end": 2,
+      "color": "#990000"
+    },
+    {
+      "start": 2,
+      "end": 3,
+      "color": "#996600"
+    },
+    {
+      "start": 3,
+      "end": 4,
+      "color": "#999900"
+    },
+    {
+      "start": 1,
+      "end": 8,
+      "color": "#009900"
+    },
+    {
+      "start": 1,
+      "end": 9,
+      "color": "#009999"
+    },
+    {
+      "start": 8,
+      "end": 10,
+      "color": "#009933"
+    },
+    {
+      "start": 10,
+      "end": 11,
+      "color": "#009966"
+    },
+    {
+      "start": 9,
+      "end": 12,
+      "color": "#006699"
+    },
+    {
+      "start": 12,
+      "end": 13,
+      "color": "#003399"
+    },
+    {
+      "start": 1,
+      "end": 5,
+      "color": "#993300"
+    },
+    {
+      "start": 5,
+      "end": 6,
+      "color": "#669900"
+    },
+    {
+      "start": 6,
+      "end": 7,
+      "color": "#339900"
+    }
+  ]
+};
+
+
+// --- Squat - Front View dataset ---------------------------------------
+const dataSet8 = {
+  "nodes": [
+    {
+      "x": 256,
+      "y": 100,
+      "color": "#FF0000"
+    },
+    {
+      "x": 256,
+      "y": 130,
+      "color": "#FF5500"
+    },
+    {
+      "x": 226,
+      "y": 130,
+      "color": "#FFAA00"
+    },
+    {
+      "x": 206,
+      "y": 160,
+      "color": "#FFFF00"
+    },
+    {
+      "x": 196,
+      "y": 190,
+      "color": "#AAFF00"
+    },
+    {
+      "x": 286,
+      "y": 130,
+      "color": "#55FF00"
+    },
+    {
+      "x": 306,
+      "y": 160,
+      "color": "#00FF00"
+    },
+    {
+      "x": 316,
+      "y": 190,
+      "color": "#00FF55"
+    },
+    {
+      "x": 236,
+      "y": 210,
+      "color": "#00FFAA"
+    },
+    {
+      "x": 233.0333251953125,
+      "y": 171.0833282470703,
+      "color": "#00FFFF"
+    },
+    {
+      "x": 236.0333251953125,
+      "y": 226.0833282470703,
+      "color": "#00AAFF"
+    },
+    {
+      "x": 276,
+      "y": 210,
+      "color": "#0055FF"
+    },
+    {
+      "x": 275.0333251953125,
+      "y": 170.0833282470703,
+      "color": "#0000FF"
+    },
+    {
+      "x": 275.0333251953125,
+      "y": 226.0833282470703,
+      "color": "#5500FF"
+    },
+    {
+      "x": 248,
+      "y": 90,
+      "color": "#AA00FF"
+    },
+    {
+      "x": 264,
+      "y": 90,
+      "color": "#FF00FF"
+    },
+    {
+      "x": 246,
+      "y": 96,
+      "color": "#FF00AA"
+    },
+    {
+      "x": 266,
+      "y": 96,
+      "color": "#FF0055"
+    }
+  ],
+  "lines": [
+    {
+      "start": 0,
+      "end": 1,
+      "color": "#FF0000"
+    },
+    {
+      "start": 1,
+      "end": 2,
+      "color": "#FF5500"
+    },
+    {
+      "start": 2,
+      "end": 3,
+      "color": "#FFAA00"
+    },
+    {
+      "start": 3,
+      "end": 4,
+      "color": "#FFFF00"
+    },
+    {
+      "start": 1,
+      "end": 5,
+      "color": "#FF5500"
+    },
+    {
+      "start": 5,
+      "end": 6,
+      "color": "#55FF00"
+    },
+    {
+      "start": 6,
+      "end": 7,
+      "color": "#00FF00"
+    },
+    {
+      "start": 1,
+      "end": 8,
+      "color": "#00FFAA"
+    },
+    {
+      "start": 8,
+      "end": 9,
+      "color": "#00FFFF"
+    },
+    {
+      "start": 9,
+      "end": 10,
+      "color": "#00AAFF"
+    },
+    {
+      "start": 1,
+      "end": 11,
+      "color": "#0055FF"
+    },
+    {
+      "start": 11,
+      "end": 12,
+      "color": "#0000FF"
+    },
+    {
+      "start": 12,
+      "end": 13,
+      "color": "#5500FF"
+    },
+    {
+      "start": 0,
+      "end": 14,
+      "color": "#AA00FF"
+    },
+    {
+      "start": 0,
+      "end": 15,
+      "color": "#FF00FF"
+    },
+    {
+      "start": 14,
+      "end": 16,
+      "color": "#FF00AA"
+    },
+    {
+      "start": 15,
+      "end": 17,
+      "color": "#FF0055"
+    }
+  ]
+};
+
+
+// --- Squat - Left Side View dataset ---------------------------------------
+const dataSet9 = {
+  "nodes": [
+    {
+      "x": 256,
+      "y": 100,
+      "color": "#FF0000"
+    },
+    {
+      "x": 256,
+      "y": 130,
+      "color": "#FF5500"
+    },
+    {
+      "x": 231.78334045410156,
+      "y": 123,
+      "color": "#FFAA00"
+    },
+    {
+      "x": 210.78334045410156,
+      "y": 147,
+      "color": "#FFFF00"
+    },
+    {
+      "x": 205.78334045410156,
+      "y": 173,
+      "color": "#AAFF00"
+    },
+    {
+      "x": 285.78334045410156,
+      "y": 138,
+      "color": "#55FF00"
+    },
+    {
+      "x": 298.78334045410156,
+      "y": 165,
+      "color": "#00FF00"
+    },
+    {
+      "x": 293.78334045410156,
+      "y": 196,
+      "color": "#00FF55"
+    },
+    {
+      "x": 236,
+      "y": 210,
+      "color": "#00FFAA"
+    },
+    {
+      "x": 222.86666870117188,
+      "y": 172,
+      "color": "#00FFFF"
+    },
+    {
+      "x": 228.86666870117188,
+      "y": 228,
+      "color": "#00AAFF"
+    },
+    {
+      "x": 276,
+      "y": 210,
+      "color": "#0055FF"
+    },
+    {
+      "x": 259.8666687011719,
+      "y": 174,
+      "color": "#0000FF"
+    },
+    {
+      "x": 266.8666687011719,
+      "y": 228,
+      "color": "#5500FF"
+    },
+    {
+      "x": 248,
+      "y": 90,
+      "color": "#AA00FF"
+    },
+    {
+      "x": 264,
+      "y": 90,
+      "color": "#FF00FF"
+    },
+    {
+      "x": 246,
+      "y": 96,
+      "color": "#FF00AA"
+    },
+    {
+      "x": 266,
+      "y": 96,
+      "color": "#FF0055"
+    }
+  ],
+  "lines": [
+    {
+      "start": 0,
+      "end": 1,
+      "color": "#FF0000"
+    },
+    {
+      "start": 1,
+      "end": 2,
+      "color": "#FF5500"
+    },
+    {
+      "start": 2,
+      "end": 3,
+      "color": "#FFAA00"
+    },
+    {
+      "start": 3,
+      "end": 4,
+      "color": "#FFFF00"
+    },
+    {
+      "start": 1,
+      "end": 5,
+      "color": "#FF5500"
+    },
+    {
+      "start": 5,
+      "end": 6,
+      "color": "#55FF00"
+    },
+    {
+      "start": 6,
+      "end": 7,
+      "color": "#00FF00"
+    },
+    {
+      "start": 1,
+      "end": 8,
+      "color": "#00FFAA"
+    },
+    {
+      "start": 8,
+      "end": 9,
+      "color": "#00FFFF"
+    },
+    {
+      "start": 9,
+      "end": 10,
+      "color": "#00AAFF"
+    },
+    {
+      "start": 1,
+      "end": 11,
+      "color": "#0055FF"
+    },
+    {
+      "start": 11,
+      "end": 12,
+      "color": "#0000FF"
+    },
+    {
+      "start": 12,
+      "end": 13,
+      "color": "#5500FF"
+    },
+    {
+      "start": 0,
+      "end": 14,
+      "color": "#AA00FF"
+    },
+    {
+      "start": 0,
+      "end": 15,
+      "color": "#FF00FF"
+    },
+    {
+      "start": 14,
+      "end": 16,
+      "color": "#FF00AA"
+    },
+    {
+      "start": 15,
+      "end": 17,
+      "color": "#FF0055"
+    }
+  ]
+};
+
+
+// --- Squat - Right Side View dataset ---------------------------------------
+const dataSet10 = {
+  "nodes": [
+    {
+      "x": 256,
+      "y": 100,
+      "color": "#FF0000"
+    },
+    {
+      "x": 256,
+      "y": 130,
+      "color": "#FF5500"
+    },
+    {
+      "x": 228.86666870117188,
+      "y": 137,
+      "color": "#FFAA00"
+    },
+    {
+      "x": 212.86666870117188,
+      "y": 166,
+      "color": "#FFFF00"
+    },
+    {
+      "x": 218.86666870117188,
+      "y": 193,
+      "color": "#AAFF00"
+    },
+    {
+      "x": 284.8666687011719,
+      "y": 122,
+      "color": "#55FF00"
+    },
+    {
+      "x": 302.8666687011719,
+      "y": 150,
+      "color": "#00FF00"
+    },
+    {
+      "x": 303.8666687011719,
+      "y": 177,
+      "color": "#00FF55"
+    },
+    {
+      "x": 236,
+      "y": 210,
+      "color": "#00FFAA"
+    },
+    {
+      "x": 254.86666870117188,
+      "y": 170,
+      "color": "#00FFFF"
+    },
+    {
+      "x": 244.86666870117188,
+      "y": 227,
+      "color": "#00AAFF"
+    },
+    {
+      "x": 276,
+      "y": 210,
+      "color": "#0055FF"
+    },
+    {
+      "x": 284.8666687011719,
+      "y": 167,
+      "color": "#0000FF"
+    },
+    {
+      "x": 285.8666687011719,
+      "y": 223,
+      "color": "#5500FF"
+    },
+    {
+      "x": 248,
+      "y": 90,
+      "color": "#AA00FF"
+    },
+    {
+      "x": 264,
+      "y": 90,
+      "color": "#FF00FF"
+    },
+    {
+      "x": 246,
+      "y": 96,
+      "color": "#FF00AA"
+    },
+    {
+      "x": 266,
+      "y": 96,
+      "color": "#FF0055"
+    }
+  ],
+  "lines": [
+    {
+      "start": 0,
+      "end": 1,
+      "color": "#FF0000"
+    },
+    {
+      "start": 1,
+      "end": 2,
+      "color": "#FF5500"
+    },
+    {
+      "start": 2,
+      "end": 3,
+      "color": "#FFAA00"
+    },
+    {
+      "start": 3,
+      "end": 4,
+      "color": "#FFFF00"
+    },
+    {
+      "start": 1,
+      "end": 5,
+      "color": "#FF5500"
+    },
+    {
+      "start": 5,
+      "end": 6,
+      "color": "#55FF00"
+    },
+    {
+      "start": 6,
+      "end": 7,
+      "color": "#00FF00"
+    },
+    {
+      "start": 1,
+      "end": 8,
+      "color": "#00FFAA"
+    },
+    {
+      "start": 8,
+      "end": 9,
+      "color": "#00FFFF"
+    },
+    {
+      "start": 9,
+      "end": 10,
+      "color": "#00AAFF"
+    },
+    {
+      "start": 1,
+      "end": 11,
+      "color": "#0055FF"
+    },
+    {
+      "start": 11,
+      "end": 12,
+      "color": "#0000FF"
+    },
+    {
+      "start": 12,
+      "end": 13,
+      "color": "#5500FF"
+    },
+    {
+      "start": 0,
+      "end": 14,
+      "color": "#AA00FF"
+    },
+    {
+      "start": 0,
+      "end": 15,
+      "color": "#FF00FF"
+    },
+    {
+      "start": 14,
+      "end": 16,
+      "color": "#FF00AA"
+    },
+    {
+      "start": 15,
+      "end": 17,
+      "color": "#FF0055"
+    }
+  ]
+};
+
+
+// --- Standing - Arms Out - Rear View dataset ---------------------------------------
+const dataSet11 = {
+  "nodes": [
+    {
+      "x": 255.03334045410156,
+      "y": 100.5,
+      "color": "#FF0000"
+    },
+    {
+      "x": 256,
+      "y": 130,
+      "color": "#FF5500"
+    },
+    {
+      "x": 295.03334045410156,
+      "y": 128.5,
+      "color": "#FFAA00"
+    },
+    {
+      "x": 291.03334045410156,
+      "y": 117.5,
+      "color": "#FFFF00"
+    },
+    {
+      "x": 275.03334045410156,
+      "y": 111.5,
+      "color": "#AAFF00"
+    },
+    {
+      "x": 217.03334045410156,
+      "y": 128.5,
+      "color": "#55FF00"
+    },
+    {
+      "x": 210.03334045410156,
+      "y": 114.5,
+      "color": "#00FF00"
+    },
+    {
+      "x": 229.03334045410156,
+      "y": 110.5,
+      "color": "#00FF55"
+    },
+    {
+      "x": 277.03334045410156,
+      "y": 204.5,
+      "color": "#00FFAA"
+    },
+    {
+      "x": 284.03334045410156,
+      "y": 259.5,
+      "color": "#00FFFF"
+    },
+    {
+      "x": 286.03334045410156,
+      "y": 315.5,
+      "color": "#00AAFF"
+    },
+    {
+      "x": 230.03334045410156,
+      "y": 203.5,
+      "color": "#0055FF"
+    },
+    {
+      "x": 221.03334045410156,
+      "y": 257.5,
+      "color": "#0000FF"
+    },
+    {
+      "x": 218.03334045410156,
+      "y": 313.5,
+      "color": "#5500FF"
+    },
+    {
+      "x": 260.03334045410156,
+      "y": 88.5,
+      "color": "#AA00FF"
+    },
+    {
+      "x": 249.03334045410156,
+      "y": 90.5,
+      "color": "#FF00FF"
+    },
+    {
+      "x": 268.03334045410156,
+      "y": 93.5,
+      "color": "#FF00AA"
+    },
+    {
+      "x": 243.03334045410156,
+      "y": 95.5,
+      "color": "#FF0055"
+    }
+  ],
+  "lines": [
+    {
+      "start": 0,
+      "end": 1,
+      "color": "#FF0000"
+    },
+    {
+      "start": 1,
+      "end": 2,
+      "color": "#FF5500"
+    },
+    {
+      "start": 2,
+      "end": 3,
+      "color": "#FFAA00"
+    },
+    {
+      "start": 3,
+      "end": 4,
+      "color": "#FFFF00"
+    },
+    {
+      "start": 1,
+      "end": 5,
+      "color": "#FF5500"
+    },
+    {
+      "start": 5,
+      "end": 6,
+      "color": "#55FF00"
+    },
+    {
+      "start": 6,
+      "end": 7,
+      "color": "#00FF00"
+    },
+    {
+      "start": 1,
+      "end": 8,
+      "color": "#00FFAA"
+    },
+    {
+      "start": 8,
+      "end": 9,
+      "color": "#00FFFF"
+    },
+    {
+      "start": 9,
+      "end": 10,
+      "color": "#00AAFF"
+    },
+    {
+      "start": 1,
+      "end": 11,
+      "color": "#0055FF"
+    },
+    {
+      "start": 11,
+      "end": 12,
+      "color": "#0000FF"
+    },
+    {
+      "start": 12,
+      "end": 13,
+      "color": "#5500FF"
+    },
+    {
+      "start": 0,
+      "end": 14,
+      "color": "#AA00FF"
+    },
+    {
+      "start": 0,
+      "end": 15,
+      "color": "#FF00FF"
+    },
+    {
+      "start": 14,
+      "end": 16,
+      "color": "#FF00AA"
+    },
+    {
+      "start": 15,
+      "end": 17,
+      "color": "#FF0055"
+    }
+  ]
+};
+
+
+// --- Standing - Front View (512x512) dataset ---------------------------------------
+const dataSet12 = {
+  "nodes": [
+    {
+      "x": 247,
+      "y": 87.13333129882812,
+      "color": "#ff0000"
+    },
+    {
+      "x": 244,
+      "y": 139.13333129882812,
+      "color": "#ff5500"
+    },
+    {
+      "x": 190,
+      "y": 140.13333129882812,
+      "color": "#ffaa00"
+    },
+    {
+      "x": 162,
+      "y": 189.13333129882812,
+      "color": "#ffff00"
+    },
+    {
+      "x": 172,
+      "y": 244.13333129882812,
+      "color": "#aaff00"
+    },
+    {
+      "x": 295,
+      "y": 140.13333129882812,
+      "color": "#55ff00"
+    },
+    {
+      "x": 323,
+      "y": 187.13333129882812,
+      "color": "#00ff00"
+    },
+    {
+      "x": 321,
+      "y": 239.13333129882812,
+      "color": "#00ff55"
+    },
+    {
+      "x": 214,
+      "y": 245.13333129882812,
+      "color": "#00ffaa"
+    },
+    {
+      "x": 275,
+      "y": 242.13333129882812,
+      "color": "#0055ff"
+    },
+    {
+      "x": 197,
+      "y": 336.1333312988281,
+      "color": "#00ffff"
+    },
+    {
+      "x": 197,
+      "y": 448.1333312988281,
+      "color": "#00aaff"
+    },
+    {
+      "x": 301,
+      "y": 326.1333312988281,
+      "color": "#0000ff"
+    },
+    {
+      "x": 293,
+      "y": 432.1333312988281,
+      "color": "#5500ff"
+    },
+    {
+      "x": 241.48333740234375,
+      "y": 73,
+      "color": "#aa00ff"
+    },
+    {
+      "x": 255.48333740234375,
+      "y": 74,
+      "color": "#ff00ff"
+    },
+    {
+      "x": 229.48333740234375,
+      "y": 78,
+      "color": "#ff00aa"
+    },
+    {
+      "x": 267.48333740234375,
+      "y": 80,
+      "color": "#ff0055"
+    }
+  ],
+  "lines": [
+    {
+      "start": 14,
+      "end": 16,
+      "color": "#660099"
+    },
+    {
+      "start": 0,
+      "end": 14,
+      "color": "#330099"
+    },
+    {
+      "start": 0,
+      "end": 15,
+      "color": "#990099"
+    },
+    {
+      "start": 15,
+      "end": 17,
+      "color": "#990066"
+    },
+    {
+      "start": 0,
+      "end": 1,
+      "color": "#000066"
+    },
+    {
+      "start": 1,
+      "end": 2,
+      "color": "#990000"
+    },
+    {
+      "start": 2,
+      "end": 3,
+      "color": "#996600"
+    },
+    {
+      "start": 3,
+      "end": 4,
+      "color": "#999900"
+    },
+    {
+      "start": 1,
+      "end": 8,
+      "color": "#009900"
+    },
+    {
+      "start": 1,
+      "end": 9,
+      "color": "#009999"
+    },
+    {
+      "start": 8,
+      "end": 10,
+      "color": "#009933"
+    },
+    {
+      "start": 10,
+      "end": 11,
+      "color": "#009966"
+    },
+    {
+      "start": 9,
+      "end": 12,
+      "color": "#006699"
+    },
+    {
+      "start": 12,
+      "end": 13,
+      "color": "#003399"
+    },
+    {
+      "start": 1,
+      "end": 5,
+      "color": "#993300"
+    },
+    {
+      "start": 5,
+      "end": 6,
+      "color": "#669900"
+    },
+    {
+      "start": 6,
+      "end": 7,
+      "color": "#339900"
+    }
+  ]
+};
+
+
+// --- Standing - Front View (512x512)Left dataset ---------------------------------------
+const dataSet13 = {
+  "nodes": [
+    {
+      "x": 117,
+      "y": 87.13333129882812,
+      "color": "#ff0000"
+    },
+    {
+      "x": 114,
+      "y": 139.13333129882812,
+      "color": "#ff5500"
+    },
+    {
+      "x": 60,
+      "y": 140.13333129882812,
+      "color": "#ffaa00"
+    },
+    {
+      "x": 32,
+      "y": 189.13333129882812,
+      "color": "#ffff00"
+    },
+    {
+      "x": 42,
+      "y": 244.13333129882812,
+      "color": "#aaff00"
+    },
+    {
+      "x": 165,
+      "y": 140.13333129882812,
+      "color": "#55ff00"
+    },
+    {
+      "x": 193,
+      "y": 187.13333129882812,
+      "color": "#00ff00"
+    },
+    {
+      "x": 191,
+      "y": 239.13333129882812,
+      "color": "#00ff55"
+    },
+    {
+      "x": 84,
+      "y": 245.13333129882812,
+      "color": "#00ffaa"
+    },
+    {
+      "x": 145,
+      "y": 242.13333129882812,
+      "color": "#0055ff"
+    },
+    {
+      "x": 67,
+      "y": 336.1333312988281,
+      "color": "#00ffff"
+    },
+    {
+      "x": 67,
+      "y": 448.1333312988281,
+      "color": "#00aaff"
+    },
+    {
+      "x": 171,
+      "y": 326.1333312988281,
+      "color": "#0000ff"
+    },
+    {
+      "x": 163,
+      "y": 432.1333312988281,
+      "color": "#5500ff"
+    },
+    {
+      "x": 111.48333740234375,
+      "y": 73,
+      "color": "#aa00ff"
+    },
+    {
+      "x": 125.48333740234375,
+      "y": 74,
+      "color": "#ff00ff"
+    },
+    {
+      "x": 99.48333740234375,
+      "y": 78,
+      "color": "#ff00aa"
+    },
+    {
+      "x": 137.48333740234375,
+      "y": 80,
+      "color": "#ff0055"
+    }
+  ],
+  "lines": [
+    {
+      "start": 14,
+      "end": 16,
+      "color": "#660099"
+    },
+    {
+      "start": 0,
+      "end": 14,
+      "color": "#330099"
+    },
+    {
+      "start": 0,
+      "end": 15,
+      "color": "#990099"
+    },
+    {
+      "start": 15,
+      "end": 17,
+      "color": "#990066"
+    },
+    {
+      "start": 0,
+      "end": 1,
+      "color": "#000066"
+    },
+    {
+      "start": 1,
+      "end": 2,
+      "color": "#990000"
+    },
+    {
+      "start": 2,
+      "end": 3,
+      "color": "#996600"
+    },
+    {
+      "start": 3,
+      "end": 4,
+      "color": "#999900"
+    },
+    {
+      "start": 1,
+      "end": 8,
+      "color": "#009900"
+    },
+    {
+      "start": 1,
+      "end": 9,
+      "color": "#009999"
+    },
+    {
+      "start": 8,
+      "end": 10,
+      "color": "#009933"
+    },
+    {
+      "start": 10,
+      "end": 11,
+      "color": "#009966"
+    },
+    {
+      "start": 9,
+      "end": 12,
+      "color": "#006699"
+    },
+    {
+      "start": 12,
+      "end": 13,
+      "color": "#003399"
+    },
+    {
+      "start": 1,
+      "end": 5,
+      "color": "#993300"
+    },
+    {
+      "start": 5,
+      "end": 6,
+      "color": "#669900"
+    },
+    {
+      "start": 6,
+      "end": 7,
+      "color": "#339900"
+    }
+  ]
+};
+
+
+// --- Standing - Front View (512x512)LeftRight dataset ---------------------------------------
+const dataSet14 = {
+  "nodes": [
+    {
+      "x": 117,
+      "y": 87.13333129882812,
+      "color": "#ff0000"
+    },
+    {
+      "x": 114,
+      "y": 139.13333129882812,
+      "color": "#ff5500"
+    },
+    {
+      "x": 60,
+      "y": 140.13333129882812,
+      "color": "#ffaa00"
+    },
+    {
+      "x": 32,
+      "y": 189.13333129882812,
+      "color": "#ffff00"
+    },
+    {
+      "x": 42,
+      "y": 244.13333129882812,
+      "color": "#aaff00"
+    },
+    {
+      "x": 165,
+      "y": 140.13333129882812,
+      "color": "#55ff00"
+    },
+    {
+      "x": 193,
+      "y": 187.13333129882812,
+      "color": "#00ff00"
+    },
+    {
+      "x": 191,
+      "y": 239.13333129882812,
+      "color": "#00ff55"
+    },
+    {
+      "x": 84,
+      "y": 245.13333129882812,
+      "color": "#00ffaa"
+    },
+    {
+      "x": 145,
+      "y": 242.13333129882812,
+      "color": "#0055ff"
+    },
+    {
+      "x": 67,
+      "y": 336.1333312988281,
+      "color": "#00ffff"
+    },
+    {
+      "x": 67,
+      "y": 448.1333312988281,
+      "color": "#00aaff"
+    },
+    {
+      "x": 171,
+      "y": 326.1333312988281,
+      "color": "#0000ff"
+    },
+    {
+      "x": 163,
+      "y": 432.1333312988281,
+      "color": "#5500ff"
+    },
+    {
+      "x": 111.48333740234375,
+      "y": 73,
+      "color": "#aa00ff"
+    },
+    {
+      "x": 125.48333740234375,
+      "y": 74,
+      "color": "#ff00ff"
+    },
+    {
+      "x": 99.48333740234375,
+      "y": 78,
+      "color": "#ff00aa"
+    },
+    {
+      "x": 137.48333740234375,
+      "y": 80,
+      "color": "#ff0055"
+    },
+    {
+      "x": 387,
+      "y": 87.13333129882812,
+      "color": "#ff0000"
+    },
+    {
+      "x": 384,
+      "y": 139.13333129882812,
+      "color": "#ff5500"
+    },
+    {
+      "x": 330,
+      "y": 140.13333129882812,
+      "color": "#ffaa00"
+    },
+    {
+      "x": 302,
+      "y": 189.13333129882812,
+      "color": "#ffff00"
+    },
+    {
+      "x": 312,
+      "y": 244.13333129882812,
+      "color": "#aaff00"
+    },
+    {
+      "x": 435,
+      "y": 140.13333129882812,
+      "color": "#55ff00"
+    },
+    {
+      "x": 463,
+      "y": 187.13333129882812,
+      "color": "#00ff00"
+    },
+    {
+      "x": 461,
+      "y": 239.13333129882812,
+      "color": "#00ff55"
+    },
+    {
+      "x": 354,
+      "y": 245.13333129882812,
+      "color": "#00ffaa"
+    },
+    {
+      "x": 415,
+      "y": 242.13333129882812,
+      "color": "#0055ff"
+    },
+    {
+      "x": 337,
+      "y": 336.1333312988281,
+      "color": "#00ffff"
+    },
+    {
+      "x": 337,
+      "y": 448.1333312988281,
+      "color": "#00aaff"
+    },
+    {
+      "x": 441,
+      "y": 326.1333312988281,
+      "color": "#0000ff"
+    },
+    {
+      "x": 433,
+      "y": 432.1333312988281,
+      "color": "#5500ff"
+    },
+    {
+      "x": 381.48333740234375,
+      "y": 73,
+      "color": "#aa00ff"
+    },
+    {
+      "x": 395.48333740234375,
+      "y": 74,
+      "color": "#ff00ff"
+    },
+    {
+      "x": 369.48333740234375,
+      "y": 78,
+      "color": "#ff00aa"
+    },
+    {
+      "x": 407.48333740234375,
+      "y": 80,
+      "color": "#ff0055"
+    }
+  ],
+  "lines": [
+    {
+      "start": 14,
+      "end": 16,
+      "color": "#660099"
+    },
+    {
+      "start": 0,
+      "end": 14,
+      "color": "#330099"
+    },
+    {
+      "start": 0,
+      "end": 15,
+      "color": "#990099"
+    },
+    {
+      "start": 15,
+      "end": 17,
+      "color": "#990066"
+    },
+    {
+      "start": 0,
+      "end": 1,
+      "color": "#000066"
+    },
+    {
+      "start": 1,
+      "end": 2,
+      "color": "#990000"
+    },
+    {
+      "start": 2,
+      "end": 3,
+      "color": "#996600"
+    },
+    {
+      "start": 3,
+      "end": 4,
+      "color": "#999900"
+    },
+    {
+      "start": 1,
+      "end": 8,
+      "color": "#009900"
+    },
+    {
+      "start": 1,
+      "end": 9,
+      "color": "#009999"
+    },
+    {
+      "start": 8,
+      "end": 10,
+      "color": "#009933"
+    },
+    {
+      "start": 10,
+      "end": 11,
+      "color": "#009966"
+    },
+    {
+      "start": 9,
+      "end": 12,
+      "color": "#006699"
+    },
+    {
+      "start": 12,
+      "end": 13,
+      "color": "#003399"
+    },
+    {
+      "start": 1,
+      "end": 5,
+      "color": "#993300"
+    },
+    {
+      "start": 5,
+      "end": 6,
+      "color": "#669900"
+    },
+    {
+      "start": 6,
+      "end": 7,
+      "color": "#339900"
+    },
+    {
+      "start": 32,
+      "end": 34,
+      "color": "#660099"
+    },
+    {
+      "start": 18,
+      "end": 32,
+      "color": "#330099"
+    },
+    {
+      "start": 18,
+      "end": 33,
+      "color": "#990099"
+    },
+    {
+      "start": 33,
+      "end": 35,
+      "color": "#990066"
+    },
+    {
+      "start": 18,
+      "end": 19,
+      "color": "#000066"
+    },
+    {
+      "start": 19,
+      "end": 20,
+      "color": "#990000"
+    },
+    {
+      "start": 20,
+      "end": 21,
+      "color": "#996600"
+    },
+    {
+      "start": 21,
+      "end": 22,
+      "color": "#999900"
+    },
+    {
+      "start": 19,
+      "end": 26,
+      "color": "#009900"
+    },
+    {
+      "start": 19,
+      "end": 27,
+      "color": "#009999"
+    },
+    {
+      "start": 26,
+      "end": 28,
+      "color": "#009933"
+    },
+    {
+      "start": 28,
+      "end": 29,
+      "color": "#009966"
+    },
+    {
+      "start": 27,
+      "end": 30,
+      "color": "#006699"
+    },
+    {
+      "start": 30,
+      "end": 31,
+      "color": "#003399"
+    },
+    {
+      "start": 19,
+      "end": 23,
+      "color": "#993300"
+    },
+    {
+      "start": 23,
+      "end": 24,
+      "color": "#669900"
+    },
+    {
+      "start": 24,
+      "end": 25,
+      "color": "#339900"
+    }
+  ]
+};
+
+
+// --- Standing - Front View (512x512)Right dataset ---------------------------------------
+const dataSet15 = {
+  "nodes": [
+    {
+      "x": 407,
+      "y": 87.13333129882812,
+      "color": "#ff0000"
+    },
+    {
+      "x": 404,
+      "y": 139.13333129882812,
+      "color": "#ff5500"
+    },
+    {
+      "x": 350,
+      "y": 140.13333129882812,
+      "color": "#ffaa00"
+    },
+    {
+      "x": 322,
+      "y": 189.13333129882812,
+      "color": "#ffff00"
+    },
+    {
+      "x": 332,
+      "y": 244.13333129882812,
+      "color": "#aaff00"
+    },
+    {
+      "x": 455,
+      "y": 140.13333129882812,
+      "color": "#55ff00"
+    },
+    {
+      "x": 483,
+      "y": 187.13333129882812,
+      "color": "#00ff00"
+    },
+    {
+      "x": 481,
+      "y": 239.13333129882812,
+      "color": "#00ff55"
+    },
+    {
+      "x": 374,
+      "y": 245.13333129882812,
+      "color": "#00ffaa"
+    },
+    {
+      "x": 435,
+      "y": 242.13333129882812,
+      "color": "#0055ff"
+    },
+    {
+      "x": 357,
+      "y": 336.1333312988281,
+      "color": "#00ffff"
+    },
+    {
+      "x": 357,
+      "y": 448.1333312988281,
+      "color": "#00aaff"
+    },
+    {
+      "x": 461,
+      "y": 326.1333312988281,
+      "color": "#0000ff"
+    },
+    {
+      "x": 453,
+      "y": 432.1333312988281,
+      "color": "#5500ff"
+    },
+    {
+      "x": 401.48333740234375,
+      "y": 73,
+      "color": "#aa00ff"
+    },
+    {
+      "x": 415.48333740234375,
+      "y": 74,
+      "color": "#ff00ff"
+    },
+    {
+      "x": 389.48333740234375,
+      "y": 78,
+      "color": "#ff00aa"
+    },
+    {
+      "x": 427.48333740234375,
+      "y": 80,
+      "color": "#ff0055"
+    }
+  ],
+  "lines": [
+    {
+      "start": 14,
+      "end": 16,
+      "color": "#660099"
+    },
+    {
+      "start": 0,
+      "end": 14,
+      "color": "#330099"
+    },
+    {
+      "start": 0,
+      "end": 15,
+      "color": "#990099"
+    },
+    {
+      "start": 15,
+      "end": 17,
+      "color": "#990066"
+    },
+    {
+      "start": 0,
+      "end": 1,
+      "color": "#000066"
+    },
+    {
+      "start": 1,
+      "end": 2,
+      "color": "#990000"
+    },
+    {
+      "start": 2,
+      "end": 3,
+      "color": "#996600"
+    },
+    {
+      "start": 3,
+      "end": 4,
+      "color": "#999900"
+    },
+    {
+      "start": 1,
+      "end": 8,
+      "color": "#009900"
+    },
+    {
+      "start": 1,
+      "end": 9,
+      "color": "#009999"
+    },
+    {
+      "start": 8,
+      "end": 10,
+      "color": "#009933"
+    },
+    {
+      "start": 10,
+      "end": 11,
+      "color": "#009966"
+    },
+    {
+      "start": 9,
+      "end": 12,
+      "color": "#006699"
+    },
+    {
+      "start": 12,
+      "end": 13,
+      "color": "#003399"
+    },
+    {
+      "start": 1,
+      "end": 5,
+      "color": "#993300"
+    },
+    {
+      "start": 5,
+      "end": 6,
+      "color": "#669900"
+    },
+    {
+      "start": 6,
+      "end": 7,
+      "color": "#339900"
+    }
+  ]
+};
+
+
+// --- Standing - Front View (512x768) dataset ---------------------------------------
+const dataSet16 = {
+  "nodes": [
+    {
+      "x": 252,
+      "y": 105.13333129882812,
+      "color": "#ff0000"
+    },
+    {
+      "x": 254,
+      "y": 165.13333129882812,
+      "color": "#ff5500"
+    },
+    {
+      "x": 183,
+      "y": 164.13333129882812,
+      "color": "#ffaa00"
+    },
+    {
+      "x": 147,
+      "y": 252.13333129882812,
+      "color": "#ffff00"
+    },
+    {
+      "x": 152,
+      "y": 347.1333312988281,
+      "color": "#aaff00"
+    },
+    {
+      "x": 327,
+      "y": 162.13333129882812,
+      "color": "#55ff00"
+    },
+    {
+      "x": 370,
+      "y": 258.1333312988281,
+      "color": "#00ff00"
+    },
+    {
+      "x": 362,
+      "y": 343.1333312988281,
+      "color": "#00ff55"
+    },
+    {
+      "x": 210,
+      "y": 330.1333312988281,
+      "color": "#00ffaa"
+    },
+    {
+      "x": 299,
+      "y": 325.1333312988281,
+      "color": "#0055ff"
+    },
+    {
+      "x": 195,
+      "y": 464.1333312988281,
+      "color": "#00ffff"
+    },
+    {
+      "x": 184,
+      "y": 631.1333312988281,
+      "color": "#00aaff"
+    },
+    {
+      "x": 337,
+      "y": 460.1333312988281,
+      "color": "#0000ff"
+    },
+    {
+      "x": 337,
+      "y": 620.1333312988281,
+      "color": "#5500ff"
+    },
+    {
+      "x": 241.48333740234375,
+      "y": 94,
+      "color": "#aa00ff"
+    },
+    {
+      "x": 261.48333740234375,
+      "y": 94,
+      "color": "#ff00ff"
+    },
+    {
+      "x": 228.48333740234375,
+      "y": 101,
+      "color": "#ff00aa"
+    },
+    {
+      "x": 275.48333740234375,
+      "y": 100,
+      "color": "#ff0055"
+    }
+  ],
+  "lines": [
+    {
+      "start": 14,
+      "end": 16,
+      "color": "#660099"
+    },
+    {
+      "start": 0,
+      "end": 14,
+      "color": "#330099"
+    },
+    {
+      "start": 0,
+      "end": 15,
+      "color": "#990099"
+    },
+    {
+      "start": 15,
+      "end": 17,
+      "color": "#990066"
+    },
+    {
+      "start": 0,
+      "end": 1,
+      "color": "#000066"
+    },
+    {
+      "start": 1,
+      "end": 2,
+      "color": "#990000"
+    },
+    {
+      "start": 2,
+      "end": 3,
+      "color": "#996600"
+    },
+    {
+      "start": 3,
+      "end": 4,
+      "color": "#999900"
+    },
+    {
+      "start": 1,
+      "end": 8,
+      "color": "#009900"
+    },
+    {
+      "start": 1,
+      "end": 9,
+      "color": "#009999"
+    },
+    {
+      "start": 8,
+      "end": 10,
+      "color": "#009933"
+    },
+    {
+      "start": 10,
+      "end": 11,
+      "color": "#009966"
+    },
+    {
+      "start": 9,
+      "end": 12,
+      "color": "#006699"
+    },
+    {
+      "start": 12,
+      "end": 13,
+      "color": "#003399"
+    },
+    {
+      "start": 1,
+      "end": 5,
+      "color": "#993300"
+    },
+    {
+      "start": 5,
+      "end": 6,
+      "color": "#669900"
+    },
+    {
+      "start": 6,
+      "end": 7,
+      "color": "#339900"
+    }
+  ]
+};
+
+
+// --- Standing - Front View (1024x1024) dataset ---------------------------------------
+const dataSet17 = {
+  "nodes": [
+    {
+      "x": 492,
+      "y": 127,
+      "color": "#ff0000"
+    },
+    {
+      "x": 492,
+      "y": 244,
+      "color": "#ff5500"
+    },
+    {
+      "x": 384,
+      "y": 239,
+      "color": "#ffaa00"
+    },
+    {
+      "x": 315.683349609375,
+      "y": 414.0833282470703,
+      "color": "#ffff00"
+    },
+    {
+      "x": 346.683349609375,
+      "y": 582.0833282470703,
+      "color": "#aaff00"
+    },
+    {
+      "x": 612,
+      "y": 245,
+      "color": "#55ff00"
+    },
+    {
+      "x": 681.683349609375,
+      "y": 420.0833282470703,
+      "color": "#00ff00"
+    },
+    {
+      "x": 655.683349609375,
+      "y": 568.0833282470703,
+      "color": "#00ff55"
+    },
+    {
+      "x": 437.683349609375,
+      "y": 526.0833282470703,
+      "color": "#00ffaa"
+    },
+    {
+      "x": 559.683349609375,
+      "y": 526.0833282470703,
+      "color": "#0055ff"
+    },
+    {
+      "x": 413,
+      "y": 736,
+      "color": "#00ffff"
+    },
+    {
+      "x": 396,
+      "y": 925,
+      "color": "#00aaff"
+    },
+    {
+      "x": 598.683349609375,
+      "y": 729.0833129882812,
+      "color": "#0000ff"
+    },
+    {
+      "x": 618,
+      "y": 907,
+      "color": "#5500ff"
+    },
+    {
+      "x": 483.79998779296875,
+      "y": 114,
+      "color": "#aa00ff"
+    },
+    {
+      "x": 500.79998779296875,
+      "y": 114,
+      "color": "#ff00ff"
+    },
+    {
+      "x": 469.79998779296875,
+      "y": 122,
+      "color": "#ff00aa"
+    },
+    {
+      "x": 514.7999877929688,
+      "y": 120,
+      "color": "#ff0055"
+    }
+  ],
+  "lines": [
+    {
+      "start": 14,
+      "end": 16,
+      "color": "#660099"
+    },
+    {
+      "start": 0,
+      "end": 14,
+      "color": "#330099"
+    },
+    {
+      "start": 0,
+      "end": 15,
+      "color": "#990099"
+    },
+    {
+      "start": 15,
+      "end": 17,
+      "color": "#990066"
+    },
+    {
+      "start": 0,
+      "end": 1,
+      "color": "#000066"
+    },
+    {
+      "start": 1,
+      "end": 2,
+      "color": "#990000"
+    },
+    {
+      "start": 2,
+      "end": 3,
+      "color": "#996600"
+    },
+    {
+      "start": 3,
+      "end": 4,
+      "color": "#999900"
+    },
+    {
+      "start": 1,
+      "end": 8,
+      "color": "#009900"
+    },
+    {
+      "start": 1,
+      "end": 9,
+      "color": "#009999"
+    },
+    {
+      "start": 8,
+      "end": 10,
+      "color": "#009933"
+    },
+    {
+      "start": 10,
+      "end": 11,
+      "color": "#009966"
+    },
+    {
+      "start": 9,
+      "end": 12,
+      "color": "#006699"
+    },
+    {
+      "start": 12,
+      "end": 13,
+      "color": "#003399"
+    },
+    {
+      "start": 1,
+      "end": 5,
+      "color": "#993300"
+    },
+    {
+      "start": 5,
+      "end": 6,
+      "color": "#669900"
+    },
+    {
+      "start": 6,
+      "end": 7,
+      "color": "#339900"
+    }
+  ]
+};
+
+
+// --- Standing - Right Hand On Hip (512x512) dataset ---------------------------------------
+const dataSet18 = {
+  "nodes": [
+    {
+      "x": 238.85000610351562,
+      "y": 106,
+      "color": "#ff0000"
+    },
+    {
+      "x": 234,
+      "y": 159.13333129882812,
+      "color": "#ff5500"
+    },
+    {
+      "x": 201,
+      "y": 159,
+      "color": "#ffaa00"
+    },
+    {
+      "x": 160,
+      "y": 207,
+      "color": "#ffff00"
+    },
+    {
+      "x": 204,
+      "y": 257,
+      "color": "#aaff00"
+    },
+    {
+      "x": 271,
+      "y": 166,
+      "color": "#55ff00"
+    },
+    {
+      "x": 302,
+      "y": 223,
+      "color": "#00ff00"
+    },
+    {
+      "x": 294,
+      "y": 294,
+      "color": "#00ff55"
+    },
+    {
+      "x": 213,
+      "y": 269,
+      "color": "#00ffaa"
+    },
+    {
+      "x": 260,
+      "y": 270,
+      "color": "#0055ff"
+    },
+    {
+      "x": 203,
+      "y": 358,
+      "color": "#00ffff"
+    },
+    {
+      "x": 187,
+      "y": 468.1333312988281,
+      "color": "#00aaff"
+    },
+    {
+      "x": 333,
+      "y": 346,
+      "color": "#0000ff"
+    },
+    {
+      "x": 354,
+      "y": 452,
+      "color": "#5500ff"
+    },
+    {
+      "x": 230.85000610351562,
+      "y": 96.66667175292969,
+      "color": "#aa00ff"
+    },
+    {
+      "x": 245.85000610351562,
+      "y": 96.66667175292969,
+      "color": "#ff00ff"
+    },
+    {
+      "x": 220.85000610351562,
+      "y": 99.66667175292969,
+      "color": "#ff00aa"
+    },
+    {
+      "x": 254.85000610351562,
+      "y": 98.66667175292969,
+      "color": "#ff0055"
+    }
+  ],
+  "lines": [
+    {
+      "start": 14,
+      "end": 16,
+      "color": "#660099"
+    },
+    {
+      "start": 0,
+      "end": 14,
+      "color": "#330099"
+    },
+    {
+      "start": 0,
+      "end": 15,
+      "color": "#990099"
+    },
+    {
+      "start": 15,
+      "end": 17,
+      "color": "#990066"
+    },
+    {
+      "start": 0,
+      "end": 1,
+      "color": "#000066"
+    },
+    {
+      "start": 1,
+      "end": 2,
+      "color": "#990000"
+    },
+    {
+      "start": 2,
+      "end": 3,
+      "color": "#996600"
+    },
+    {
+      "start": 3,
+      "end": 4,
+      "color": "#999900"
+    },
+    {
+      "start": 1,
+      "end": 8,
+      "color": "#009900"
+    },
+    {
+      "start": 1,
+      "end": 9,
+      "color": "#009999"
+    },
+    {
+      "start": 8,
+      "end": 10,
+      "color": "#009933"
+    },
+    {
+      "start": 10,
+      "end": 11,
+      "color": "#009966"
+    },
+    {
+      "start": 9,
+      "end": 12,
+      "color": "#006699"
+    },
+    {
+      "start": 12,
+      "end": 13,
+      "color": "#003399"
+    },
+    {
+      "start": 1,
+      "end": 5,
+      "color": "#993300"
+    },
+    {
+      "start": 5,
+      "end": 6,
+      "color": "#669900"
+    },
+    {
+      "start": 6,
+      "end": 7,
+      "color": "#339900"
+    }
+  ]
+};
+
+
+// --- Standing - Right Hand On Hip 2 (512x512) dataset ---------------------------------------
+const dataSet19 = {
+  "nodes": [
+    {
+      "x": 237,
+      "y": 87.13333129882812,
+      "color": "#ff0000"
+    },
+    {
+      "x": 234,
+      "y": 139.13333129882812,
+      "color": "#ff5500"
+    },
+    {
+      "x": 201,
+      "y": 139,
+      "color": "#ffaa00"
+    },
+    {
+      "x": 179.60000610351562,
+      "y": 202,
+      "color": "#ffff00"
+    },
+    {
+      "x": 208.60000610351562,
+      "y": 253,
+      "color": "#aaff00"
+    },
+    {
+      "x": 271,
+      "y": 146,
+      "color": "#55ff00"
+    },
+    {
+      "x": 302,
+      "y": 203,
+      "color": "#00ff00"
+    },
+    {
+      "x": 294,
+      "y": 274,
+      "color": "#00ff55"
+    },
+    {
+      "x": 218.60000610351562,
+      "y": 265,
+      "color": "#00ffaa"
+    },
+    {
+      "x": 260,
+      "y": 250,
+      "color": "#0055ff"
+    },
+    {
+      "x": 215.60000610351562,
+      "y": 345,
+      "color": "#00ffff"
+    },
+    {
+      "x": 212.60000610351562,
+      "y": 428,
+      "color": "#00aaff"
+    },
+    {
+      "x": 333,
+      "y": 326,
+      "color": "#0000ff"
+    },
+    {
+      "x": 354,
+      "y": 432,
+      "color": "#5500ff"
+    },
+    {
+      "x": 230.79998779296875,
+      "y": 74,
+      "color": "#aa00ff"
+    },
+    {
+      "x": 245.9666748046875,
+      "y": 75,
+      "color": "#ff00ff"
+    },
+    {
+      "x": 219.79998779296875,
+      "y": 78,
+      "color": "#ff00aa"
+    },
+    {
+      "x": 256.79998779296875,
+      "y": 81,
+      "color": "#ff0055"
+    }
+  ],
+  "lines": [
+    {
+      "start": 14,
+      "end": 16,
+      "color": "#660099"
+    },
+    {
+      "start": 0,
+      "end": 14,
+      "color": "#330099"
+    },
+    {
+      "start": 0,
+      "end": 15,
+      "color": "#990099"
+    },
+    {
+      "start": 15,
+      "end": 17,
+      "color": "#990066"
+    },
+    {
+      "start": 0,
+      "end": 1,
+      "color": "#000066"
+    },
+    {
+      "start": 1,
+      "end": 2,
+      "color": "#990000"
+    },
+    {
+      "start": 2,
+      "end": 3,
+      "color": "#996600"
+    },
+    {
+      "start": 3,
+      "end": 4,
+      "color": "#999900"
+    },
+    {
+      "start": 1,
+      "end": 8,
+      "color": "#009900"
+    },
+    {
+      "start": 1,
+      "end": 9,
+      "color": "#009999"
+    },
+    {
+      "start": 8,
+      "end": 10,
+      "color": "#009933"
+    },
+    {
+      "start": 10,
+      "end": 11,
+      "color": "#009966"
+    },
+    {
+      "start": 9,
+      "end": 12,
+      "color": "#006699"
+    },
+    {
+      "start": 12,
+      "end": 13,
+      "color": "#003399"
+    },
+    {
+      "start": 1,
+      "end": 5,
+      "color": "#993300"
+    },
+    {
+      "start": 5,
+      "end": 6,
+      "color": "#669900"
+    },
+    {
+      "start": 6,
+      "end": 7,
+      "color": "#339900"
+    }
+  ]
+};
+
+
+// --- Walking - Left Side View dataset ---------------------------------------
+const dataSet20 = {
+  "nodes": [
+    {
+      "x": 256,
+      "y": 100,
+      "color": "#FF0000"
+    },
+    {
+      "x": 260.78334045410156,
+      "y": 129,
+      "color": "#FF5500"
+    },
+    {
+      "x": 246.78334045410156,
+      "y": 130,
+      "color": "#FFAA00"
+    },
+    {
+      "x": 237.78334045410156,
+      "y": 160,
+      "color": "#FFFF00"
+    },
+    {
+      "x": 228.78334045410156,
+      "y": 186,
+      "color": "#AAFF00"
+    },
+    {
+      "x": 276,
+      "y": 130,
+      "color": "#55FF00"
+    },
+    {
+      "x": 286,
+      "y": 160,
+      "color": "#00FF00"
+    },
+    {
+      "x": 296,
+      "y": 190,
+      "color": "#00FF55"
+    },
+    {
+      "x": 256,
+      "y": 190,
+      "color": "#00FFAA"
+    },
+    {
+      "x": 246,
+      "y": 250,
+      "color": "#00FFFF"
+    },
+    {
+      "x": 236,
+      "y": 300,
+      "color": "#00AAFF"
+    },
+    {
+      "x": 268.78334045410156,
+      "y": 191,
+      "color": "#0055FF"
+    },
+    {
+      "x": 270.78334045410156,
+      "y": 244,
+      "color": "#0000FF"
+    },
+    {
+      "x": 272.78334045410156,
+      "y": 278,
+      "color": "#5500FF"
+    },
+    {
+      "x": 250,
+      "y": 90,
+      "color": "#AA00FF"
+    },
+    {
+      "x": 258,
+      "y": 90,
+      "color": "#FF00FF"
+    },
+    {
+      "x": 241.78334045410156,
+      "y": 96,
+      "color": "#FF00AA"
+    },
+    {
+      "x": 266.78334045410156,
+      "y": 95,
+      "color": "#FF0055"
+    }
+  ],
+  "lines": [
+    {
+      "start": 0,
+      "end": 1,
+      "color": "#FF0000"
+    },
+    {
+      "start": 1,
+      "end": 2,
+      "color": "#FF5500"
+    },
+    {
+      "start": 2,
+      "end": 3,
+      "color": "#FFAA00"
+    },
+    {
+      "start": 3,
+      "end": 4,
+      "color": "#FFFF00"
+    },
+    {
+      "start": 1,
+      "end": 5,
+      "color": "#FF5500"
+    },
+    {
+      "start": 5,
+      "end": 6,
+      "color": "#55FF00"
+    },
+    {
+      "start": 6,
+      "end": 7,
+      "color": "#00FF00"
+    },
+    {
+      "start": 1,
+      "end": 8,
+      "color": "#00FFAA"
+    },
+    {
+      "start": 8,
+      "end": 9,
+      "color": "#00FFFF"
+    },
+    {
+      "start": 9,
+      "end": 10,
+      "color": "#00AAFF"
+    },
+    {
+      "start": 1,
+      "end": 11,
+      "color": "#0055FF"
+    },
+    {
+      "start": 11,
+      "end": 12,
+      "color": "#0000FF"
+    },
+    {
+      "start": 12,
+      "end": 13,
+      "color": "#5500FF"
+    },
+    {
+      "start": 0,
+      "end": 14,
+      "color": "#AA00FF"
+    },
+    {
+      "start": 0,
+      "end": 15,
+      "color": "#FF00FF"
+    },
+    {
+      "start": 14,
+      "end": 16,
+      "color": "#FF00AA"
+    },
+    {
+      "start": 15,
+      "end": 17,
+      "color": "#FF0055"
+    }
+  ]
+};
+
+
+
+
+
+// ------------------------------------------------------------------
+// All dataSets listed and matched with their HTML 'select' name
+// -----------------------------------------------------------------
+const allDataSets = {
+  "Set 1": dataSet1,	// Arms Open - Front View
+  "Set 2": dataSet2,	// Arms Open - Left View
+  "Set 3": dataSet3,	// Facing Left (512x512)
+  "Set 4": dataSet4,	// Facing Right - Left Leg Up(512x512)
+  "Set 5": dataSet5,	// Facing Right - Right Leg Up(512x512)
+  "Set 6": dataSet6,	// Facing Right (512x512)
+  "Set 7": dataSet7,	// Left Hand On Hip (512x512)
+  "Set 8": dataSet8,	// Squat - Front View
+  "Set 9": dataSet9,	// Squat - Left Side View
+  "Set 10": dataSet10,	// Squat - Right Side View
+  "Set 11": dataSet11,	// Standing - Arms Out
+  "Set 12": dataSet12,	// Standing - Front View (512x512)
+  "Set 13": dataSet13,	// Standing - Front View (512x512)Left
+  "Set 14": dataSet14,	// Standing - Front View (512x512)LeftRight
+  "Set 15": dataSet15,	// Standing - Front View (512x512)Right
+  "Set 16": dataSet16,	// Standing - Front View (512x768)
+  "Set 17": dataSet17,	// Standing - Front View (1024x1024)
+  "Set 18": dataSet18,	// Standing - Right Hand On Hip (512x512)
+  "Set 19": dataSet19,	// Standing - Right Hand On Hip 2 (512x512)
+  "Set 20": dataSet20,	// Walking - Left Side View
+};
+
+// -EOF-
+
+
+</script>
+
+<!-- ========================================== -->
+<!-- Internationalization (i18n) Module         -->
+<!-- ========================================== -->
+<script>
+/**
+ * Rock's Simple OpenPose Editor - i18n System
+ * Soporte multilingüe extensible / Extensible multilingual support
+ */
+const i18n = {
+  currentLang: 'es',
+  supportedLanguages: {},
+
+  /**
+   * Registra un nuevo paquete de idioma.
+   * Permite agregar fácilmente más idiomas en cualquier momento:
+   * i18n.registerLanguage('fr', 'Français', { ... });
+   */
+  registerLanguage(code, name, dict) {
+    this.supportedLanguages[code] = {
+      langName: name,
+      ...dict
+    };
+    const selector = document.getElementById("languageSelector");
+    if (selector) {
+      this.populateSelector();
+    }
+  },
+
+  /**
+   * Obtener texto traducido mediante dot notation con fallback al inglés
+   */
+  t(path, lang = this.currentLang) {
+    const active = this.supportedLanguages[lang] || this.supportedLanguages['en'] || {};
+    const fallback = this.supportedLanguages['en'] || {};
+    
+    const resolve = (obj, p) => {
+      return p.split('.').reduce((prev, curr) => (prev && prev[curr] !== undefined) ? prev[curr] : undefined, obj);
+    };
+
+    let result = resolve(active, path);
+    if (result === undefined) {
+      result = resolve(fallback, path);
+    }
+    return result !== undefined ? result : path;
+  },
+
+  /**
+   * Cambiar idioma activo y actualizar la interfaz completa
+   */
+  setLanguage(langCode) {
+    if (!this.supportedLanguages[langCode]) {
+      langCode = this.supportedLanguages['en'] ? 'en' : Object.keys(this.supportedLanguages)[0];
+    }
+    this.currentLang = langCode;
+
+    try {
+      localStorage.setItem('rkopenpose_preferred_lang', langCode);
+    } catch (e) {}
+
+    document.documentElement.lang = langCode;
+
+    // Actualizar <title>
+    const pageTitle = this.t('title');
+    if (pageTitle) document.title = pageTitle;
+
+    // Actualizar elementos con data-i18n (textContent)
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      el.textContent = this.t(key);
+    });
+
+    // Actualizar elementos con data-i18n-html (innerHTML)
+    document.querySelectorAll('[data-i18n-html]').forEach(el => {
+      const key = el.getAttribute('data-i18n-html');
+      el.innerHTML = this.t(key);
+    });
+
+    // Actualizar tooltips y accesibilidad con data-i18n-title
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+      const key = el.getAttribute('data-i18n-title');
+      const val = this.t(key);
+      el.setAttribute('title', val);
+      el.setAttribute('aria-label', val);
+    });
+
+    // Actualizar etiquetas del selector de presets
+    const dataSelector = document.getElementById("dataSelector");
+    if (dataSelector) {
+      const currentSelected = dataSelector.value;
+      for (const opt of dataSelector.options) {
+        const optKey = `presets.options.${opt.value}`;
+        const translated = this.t(optKey);
+        if (translated && translated !== optKey) {
+          opt.textContent = translated;
+        }
+      }
+      dataSelector.value = currentSelected;
+    }
+
+    // Sincronizar el select de idiomas
+    const langSelect = document.getElementById("languageSelector");
+    if (langSelect && langSelect.value !== langCode) {
+      langSelect.value = langCode;
+    }
+
+    if (typeof updateBoneModeUI === 'function') updateBoneModeUI();
+    if (typeof updateSelectionUI === 'function') updateSelectionUI();
+  },
+
+  populateSelector() {
+    const selector = document.getElementById("languageSelector");
+    if (!selector) return;
+    const currentVal = this.currentLang;
+    selector.innerHTML = '';
+    for (const [code, data] of Object.entries(this.supportedLanguages)) {
+      const opt = document.createElement("option");
+      opt.value = code;
+      opt.textContent = data.langName || code.toUpperCase();
+      selector.appendChild(opt);
+    }
+    if (currentVal && this.supportedLanguages[currentVal]) {
+      selector.value = currentVal;
+    }
+  },
+
+  init() {
+    this.populateSelector();
+
+    // Determinar idioma preferido:
+    // 1. Guardado en localStorage
+    // 2. Idioma del navegador si está soportado
+    // 3. Fallback: español si coincide con el navegador, o inglés
+    let preferred = null;
+    try {
+      preferred = localStorage.getItem('rkopenpose_preferred_lang');
+    } catch (e) {}
+
+    if (!preferred || !this.supportedLanguages[preferred]) {
+      const navLang = (navigator.language || navigator.userLanguage || '').substring(0, 2).toLowerCase();
+      if (this.supportedLanguages[navLang]) {
+        preferred = navLang;
+      } else {
+        preferred = 'es'; // Por defecto español
+      }
+    }
+
+    this.setLanguage(preferred);
+  }
+};
+window.i18n = i18n;
+
+// ==========================================
+// Paquetes de Idioma / Language Packs
+// ==========================================
+
+// 1. Inglés (English)
+i18n.registerLanguage('en', 'English', {
+  title: "OpenPoseFree",
+  languageLabel: "🌐 Language / Idioma:",
+  instructions: {
+    step1: "Step 1. Select canvas size (output PNG image size).",
+    step2: "Step 2. Select a built-in preset or load a JSON preset file that has been previously '<b>saved by this app</b>'.",
+    step3: "Step 3. Adjust the pose. (Note: <i>Grab the 'joints', not the 'limbs'. You can also use the 'Shift control' to move the whole pose, up/down/left/right.</i>)",
+    step4: "Step 4. When finished adjusting the pose, save the PNG file for use with the OpenPose ControlNet.",
+    guideBtn: "Quick Guide",
+    step1Title: "Canvas",
+    step2Title: "Pose Preset",
+    step3Title: "Adjust & AI",
+    step4Title: "Export"
+  },
+  canvasSize: {
+    label: "Select Canvas Size (Size of Saved OpenPose PNG Image)"
+  },
+  presets: {
+    label: "(Built-In) Pose Presets",
+    loadBtn: "Load Preset",
+    options: {
+      "Set 1": "Arms Open - Front View",
+      "Set 2": "Arms Open - Left View",
+      "Set 3": "Facing Left (512x512)",
+      "Set 4": "Facing Right - Left Leg Up (512x512)",
+      "Set 5": "Facing Right - Right Leg Up (512x512)",
+      "Set 6": "Facing Right (512x512)",
+      "Set 7": "Left Hand On Hip (512x512)",
+      "Set 8": "Squat - Front View",
+      "Set 9": "Squat - Left Side View",
+      "Set 10": "Squat - Right Side View",
+      "Set 11": "Standing - Arms Out",
+      "Set 12": "Standing - Front View (512x512)",
+      "Set 13": "Standing - Front View (512x512) Left",
+      "Set 14": "Standing - Front View (512x512) Left Right",
+      "Set 15": "Standing - Front View (512x512) Right",
+      "Set 16": "Standing - Front View (512x768)",
+      "Set 17": "Standing - Front View (1024x1024)",
+      "Set 18": "Standing - Right Hand On Hip (512x512)",
+      "Set 19": "Standing - Right Hand On Hip 2 (512x512)",
+      "Set 20": "Walking - Left Side View"
+    }
+  },
+  json: {
+    loadLabel: "Load JSON Preset File",
+    saveLabel: "Save JSON Preset File",
+    saveBtn: "Save JSON",
+    invalidJson: "Invalid JSON file."
+  },
+  joystick: {
+    shiftLabel: "Shift:",
+    up: "Shift Up",
+    left: "Shift Left",
+    right: "Shift Right",
+    down: "Shift Down"
+  },
+  export: {
+    label: "Save PNG File for OpenPose",
+    exportBtn: "Export PNG"
+  },
+  tools: {
+    boneModeOff: "🦴 Bone Mode: OFF",
+    boneModeOn: "🦴 Bone Mode: ON",
+    selectAll: "All",
+    clearSelection: "Clear",
+    scaleUp: "Scale Up (+10%)",
+    scaleDown: "Scale Down (-10%)",
+    fitCanvas: "Fit to Canvas",
+    selectedCount: "{count} selected",
+    canvasTip: "💡 Drag on background to box-select. Drag box edges/handles to SCALE. Turn on Bone Mode to move whole limbs."
+  },
+  ai: {
+    panelTitle: "Detect Pose from Image or Video (MoveNet AI)",
+    selectMediaLabel: "Upload Image or Video:",
+    modelTypeLabel: "AI Model:",
+    modelThunder: "MoveNet Thunder (High Precision)",
+    modelLightning: "MoveNet Lightning (Ultra Fast)",
+    statusReady: "Ready to upload media",
+    convertBtn: "⚡ Detect Pose & Load to Editor",
+    convertImageBtn: "⚡ Convert Image to OpenPose",
+    convertFrameBtn: "⚡ Convert Current Frame to OpenPose",
+    prevFrame: "⏮ -1 Frame",
+    nextFrame: "+1 Frame ⏭",
+    captureKeyframeBtn: "📸 Save Keyframe",
+    rangeLabel: "Select Video Range (Start / End):",
+    setStartBtn: "📍 Set Start",
+    setEndBtn: "📍 Set End",
+    extractRangeBtn: "✂ Extract 5 Keyframes in Range",
+    keyframesListTitle: "Selected Keyframes (Click to transfer to editor):",
+    noKeyframes: "No keyframes captured yet.",
+    showGuideLabel: "Show background image/video as guide",
+    guideOpacityLabel: "Opacity:",
+    tfNotLoaded: "TensorFlow.js or MoveNet model is not loaded yet. Please check your internet connection.",
+    loadingModel: "Loading MoveNet AI model...",
+    modelReady: "AI Model ready for pose detection",
+    errorLoadingModel: "Error loading MoveNet model:",
+    imageLoaded: "Image loaded:",
+    videoLoaded: "Video loaded:",
+    detecting: "Analyzing human pose with MoveNet...",
+    noPoseFound: "No person detected in image/frame. Try with a clearer pose.",
+    poseApplied: "OpenPose skeleton generated successfully!",
+    detectionError: "Error during detection:",
+    keyframeAdded: "Keyframe saved at:",
+    extractingKeyframes: "Extracting range keyframes...",
+    rangeExtracted: "Keyframes extracted successfully:",
+    keyframeClick: "Click to detect and transfer this pose to canvas",
+    invalidRange: "The selected time range is invalid.",
+    noMediaAlert: "Please upload an image or video first.",
+    videoGenTitle: "🎬 Generate Full OpenPose Video (Black Background):",
+    scopeFull: "Entire video",
+    scopeRange: "Only range (Start - End)",
+    fpsLabel: "FPS:",
+    formatLabel: "Format:",
+    btnStartVideoProcess: "🎬 Process & Download OpenPose Video",
+    btnCancel: "⏹ Cancel",
+    analyzingFrames: "Analyzing frames with AI...",
+    encodingVideo: "Encoding OpenPose video...",
+    videoSuccess: "✅ OpenPose video generated successfully!",
+    btnDownloadVideo: "📥 Download Video",
+    btnDownloadJSON: "💾 Poses JSON",
+    cancelled: "Video processing cancelled."
+  },
+  footer: {
+    text: "OpenPoseFree • Free & Open Source AI Pose & Video Studio",
+    portfolio: "Portfolio",
+    donate: "Donate",
+    freeMsg: "Free and open-source software: feel free to use it in your personal and commercial projects. If you find it helpful, please consider supporting its ongoing development with a donation."
+  }
+});
+
+// 2. Español
+i18n.registerLanguage('es', 'Español', {
+  title: "OpenPoseFree",
+  languageLabel: "🌐 Idioma / Language:",
+  instructions: {
+    step1: "Paso 1. Selecciona el tamaño del lienzo (tamaño de la imagen PNG de salida).",
+    step2: "Paso 2. Selecciona un ajuste predefinido o carga un archivo JSON que haya sido previamente '<b>guardado por esta aplicación</b>'.",
+    step3: "Paso 3. Ajusta la pose. (Nota: <i>Arrastra las 'articulaciones', no las 'extremidades'. También puedes usar el 'Control de desplazamiento' para mover toda la pose, arriba/abajo/izquierda/derecha.</i>)",
+    step4: "Paso 4. Cuando termines de ajustar la pose, guarda el archivo PNG para usarlo con ControlNet de OpenPose.",
+    guideBtn: "Guía Rápida",
+    step1Title: "Lienzo",
+    step2Title: "Pose Preset",
+    step3Title: "Ajustar & IA",
+    step4Title: "Exportar"
+  },
+  canvasSize: {
+    label: "Seleccionar tamaño del lienzo (Tamaño de imagen PNG de OpenPose)"
+  },
+  presets: {
+    label: "Poses predefinidas (Integradas)",
+    loadBtn: "Cargar pose",
+    options: {
+      "Set 1": "Brazos abiertos - Vista frontal",
+      "Set 2": "Brazos abiertos - Vista lateral izquierda",
+      "Set 3": "Mirando a la izquierda (512x512)",
+      "Set 4": "Mirando a la derecha - Pierna izq. levantada (512x512)",
+      "Set 5": "Mirando a la derecha - Pierna der. levantada (512x512)",
+      "Set 6": "Mirando a la derecha (512x512)",
+      "Set 7": "Mano izquierda en la cadera (512x512)",
+      "Set 8": "Sentadilla - Vista frontal",
+      "Set 9": "Sentadilla - Vista lateral izquierda",
+      "Set 10": "Sentadilla - Vista lateral derecha",
+      "Set 11": "De pie - Brazos extendidos",
+      "Set 12": "De pie - Vista frontal (512x512)",
+      "Set 13": "De pie - Vista frontal (512x512) Izquierda",
+      "Set 14": "De pie - Vista frontal (512x512) Izq./Der.",
+      "Set 15": "De pie - Vista frontal (512x512) Derecha",
+      "Set 16": "De pie - Vista frontal (512x768)",
+      "Set 17": "De pie - Vista frontal (1024x1024)",
+      "Set 18": "De pie - Mano derecha en la cadera (512x512)",
+      "Set 19": "De pie - Mano derecha en la cadera 2 (512x512)",
+      "Set 20": "Caminando - Vista lateral izquierda"
+    }
+  },
+  json: {
+    loadLabel: "Cargar archivo JSON de pose",
+    saveLabel: "Guardar archivo JSON de pose",
+    saveBtn: "Guardar JSON",
+    invalidJson: "Archivo JSON no válido."
+  },
+  joystick: {
+    shiftLabel: "Mover:",
+    up: "Mover hacia arriba",
+    left: "Mover hacia la izquierda",
+    right: "Mover hacia la derecha",
+    down: "Mover hacia abajo"
+  },
+  export: {
+    label: "Guardar archivo PNG para OpenPose",
+    exportBtn: "Exportar PNG"
+  },
+  tools: {
+    boneModeOff: "🦴 Modo Hueso: DESACTIVADO",
+    boneModeOn: "🦴 Modo Hueso: ACTIVADO",
+    selectAll: "Todos",
+    clearSelection: "Limpiar",
+    scaleUp: "Agrandar (+10%)",
+    scaleDown: "Achicar (-10%)",
+    fitCanvas: "Ajustar al lienzo",
+    selectedCount: "{count} seleccionados",
+    canvasTip: "💡 Arrastra el fondo para seleccionar puntos. Tira de las orillas del recuadro para ESCALAR. Activa Modo Hueso para mover extremidades."
+  },
+  ai: {
+    panelTitle: "Detectar Pose en Imagen o Video (MoveNet IA)",
+    selectMediaLabel: "Cargar Imagen o Video:",
+    modelTypeLabel: "Modelo IA:",
+    modelThunder: "MoveNet Thunder (Alta Precisión)",
+    modelLightning: "MoveNet Lightning (Ultra Rápido)",
+    statusReady: "Listo para cargar archivo",
+    convertBtn: "⚡ Detectar Pose y Cargar al Editor",
+    convertImageBtn: "⚡ Convertir Imagen a OpenPose",
+    convertFrameBtn: "⚡ Convertir Frame Actual a OpenPose",
+    prevFrame: "⏮ -1 Frame",
+    nextFrame: "+1 Frame ⏭",
+    captureKeyframeBtn: "📸 Guardar Keyframe",
+    rangeLabel: "Seleccionar Rango de Video (Inicio / Fin):",
+    setStartBtn: "📍 Marcar Inicio",
+    setEndBtn: "📍 Marcar Fin",
+    extractRangeBtn: "✂ Extraer 5 Keyframes en este Rango",
+    keyframesListTitle: "Keyframes Seleccionados (Haz clic para transferir al editor):",
+    noKeyframes: "No hay keyframes capturados todavía.",
+    showGuideLabel: "Mostrar imagen/video de fondo como guía",
+    guideOpacityLabel: "Opacidad:",
+    tfNotLoaded: "TensorFlow.js o el modelo MoveNet aún no están listos. Por favor, verifica tu conexión a internet.",
+    loadingModel: "Cargando modelo MoveNet de código abierto...",
+    modelReady: "Modelo IA listo para detectar poses",
+    errorLoadingModel: "Error al cargar modelo MoveNet:",
+    imageLoaded: "Imagen cargada:",
+    videoLoaded: "Video cargado:",
+    detecting: "Analizando postura humana con MoveNet...",
+    noPoseFound: "No se detectó ninguna persona en la imagen/frame. Intenta con otra pose más visible.",
+    poseApplied: "¡Pose OpenPose generada con éxito!",
+    detectionError: "Error durante la detección:",
+    keyframeAdded: "Keyframe guardado en:",
+    extractingKeyframes: "Extrayendo keyframes del rango...",
+    rangeExtracted: "Keyframes extraídos con éxito:",
+    keyframeClick: "Haz clic para detectar y transferir esta pose al lienzo",
+    invalidRange: "El rango de tiempo seleccionado no es válido.",
+    noMediaAlert: "Por favor, carga primero una imagen o un video.",
+    videoGenTitle: "🎬 Generar Video Completo a OpenPose (Fondo Negro):",
+    scopeFull: "Todo el video",
+    scopeRange: "Solo rango (Inicio - Fin)",
+    fpsLabel: "FPS:",
+    formatLabel: "Formato:",
+    btnStartVideoProcess: "🎬 Procesar y Descargar Video OpenPose",
+    btnCancel: "⏹ Cancelar",
+    analyzingFrames: "Analizando frames con IA...",
+    encodingVideo: "Codificando video OpenPose...",
+    videoSuccess: "✅ ¡Video OpenPose generado con éxito!",
+    btnDownloadVideo: "📥 Descargar Video",
+    btnDownloadJSON: "💾 Poses JSON",
+    cancelled: "Procesamiento de video cancelado."
+  },
+  footer: {
+    text: "OpenPoseFree • Estudio de Poses y Video con IA Gratuito y de Código Abierto",
+    portfolio: "Portafolio",
+    donate: "Donar",
+    freeMsg: "Software libre y gratuito: siéntete libre de utilizarlo en tus proyectos personales y comerciales. Si te resulta útil, considera apoyar su desarrollo continuo con una donación."
+  }
+});
+</script>
+
+<!-- Include Rock's OpenPose Javascript Code -->
+<script>
+
+	//
+	// filename: rkopenpose.js
+	//
+	// desc: Rock's OpenPose Javascript Code 
+	// copy: (C.) 2025 Rock Stevens - rockstevens.com
+	// license: MIT
+	//
+
+	const canvas = document.getElementById("canvas");
+	const ctx = canvas.getContext("2d");
+
+	const nodes = [];
+	const lines = [];
+	let originalNodes = [];
+
+	// -----------------------------------
+	// rkadded Drawing constants for OpenPose
+	const lineThickness = 15;
+	const lineTaper = 0.1;
+	const nodeRadius = 5;
+	const nodeBoundaryThickness = 1;
+	// Transparency constant (60% opacity)
+	const transparency = 0.6;
+
+	// Helper function to convert hex to RGBA with a given alpha
+	function hexToRgba(hex, alpha) {
+		let r = 0, g = 0, b = 0;
+		if (hex.length === 4) {
+			r = parseInt(hex.substring(1, 2) + hex.substring(1, 2), 16);
+			g = parseInt(hex.substring(2, 3) + hex.substring(2, 3), 16);
+			b = parseInt(hex.substring(3, 4) + hex.substring(3, 4), 16);
+		} else if (hex.length === 7) {
+			r = parseInt(hex.substring(1, 3), 16);
+			g = parseInt(hex.substring(3, 5), 16);
+			b = parseInt(hex.substring(5, 7), 16);
+		}
+		return `rgba(${r},${g},${b},${alpha})`;
+	}
+
+	// main draw() function
+	let guideMedia = null;
+	let showGuide = false;
+	let guideOpacity = 0.4;
+
+	function setGuideMedia(media) {
+	  guideMedia = media;
+	  const check = document.getElementById('aiShowGuide');
+	  if (check) {
+	    check.checked = true;
+	    showGuide = true;
+	  }
+	  draw();
+	}
+
+	function toggleGuide(visible) {
+	  showGuide = visible;
+	  draw();
+	}
+
+	function updateGuideOpacity(val) {
+	  guideOpacity = parseFloat(val);
+	  const display = document.getElementById('aiGuideOpacityVal');
+	  if (display) display.textContent = Math.round(guideOpacity * 100) + '%';
+	  draw();
+	}
+
+	function draw() {
+	  ctx.fillStyle = "#000000";
+	  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+	  // Dibuja imagen de guía de fondo si está activa (para calcar/ajustar pose)
+	  if (showGuide && guideMedia) {
+	    ctx.save();
+	    ctx.globalAlpha = guideOpacity;
+	    const mw = guideMedia.videoWidth || guideMedia.naturalWidth || guideMedia.width || canvas.width;
+	    const mh = guideMedia.videoHeight || guideMedia.naturalHeight || guideMedia.height || canvas.height;
+	    const scale = Math.min(canvas.width / mw, canvas.height / mh);
+	    const dw = mw * scale;
+	    const dh = mh * scale;
+	    const dx = (canvas.width - dw) / 2;
+	    const dy = (canvas.height - dh) / 2;
+	    ctx.drawImage(guideMedia, dx, dy, dw, dh);
+	    ctx.restore();
+	  }
+
+	  lines.forEach(line => {
+		ctx.strokeStyle = hexToRgba(line.color, transparency);
+		drawTaperedOval(ctx, line.start.x, line.start.y, line.end.x, line.end.y, ctx.strokeStyle, lineThickness, lineTaper);
+	  });
+
+		// rkold simple line drawing code just to get it going
+		// keeping it around for debugging
+	//      lines.forEach(line => {
+	//        ctx.strokeStyle = hexToRgba(line.color, transparency);
+	//        ctx.beginPath();
+	//        ctx.moveTo(line.start.x, line.start.y);
+	//        ctx.lineTo(line.end.x, line.end.y);
+	//        ctx.stroke();
+	//      });
+
+	  nodes.forEach(node => {
+		ctx.fillStyle = node.color;
+		ctx.beginPath();
+		ctx.arc(node.x, node.y, nodeRadius, 0, Math.PI * 2);
+		ctx.fill();
+
+		// Si el nodo está seleccionado, dibujar anillo exterior de selección
+		if (typeof selectedNodes !== 'undefined' && selectedNodes.has(node)) {
+			ctx.save();
+			ctx.strokeStyle = "#ffffff";
+			ctx.lineWidth = 2;
+			ctx.beginPath();
+			ctx.arc(node.x, node.y, nodeRadius + 3, 0, Math.PI * 2);
+			ctx.stroke();
+
+			ctx.strokeStyle = "#00e5ff";
+			ctx.lineWidth = 1;
+			ctx.beginPath();
+			ctx.arc(node.x, node.y, nodeRadius + 5, 0, Math.PI * 2);
+			ctx.stroke();
+			ctx.restore();
+		}
+	  });
+
+	  // Dibuja el recuadro interactivo de selección de zona cuadrada/rectangular
+	  if (typeof isBoxSelecting !== 'undefined' && isBoxSelecting) {
+		ctx.save();
+		const rx = Math.min(boxStart.x, boxCurrent.x);
+		const ry = Math.min(boxStart.y, boxCurrent.y);
+		const rw = Math.abs(boxCurrent.x - boxStart.x);
+		const rh = Math.abs(boxCurrent.y - boxStart.y);
+
+		ctx.fillStyle = "rgba(100, 181, 246, 0.2)";
+		ctx.fillRect(rx, ry, rw, rh);
+		ctx.strokeStyle = "#64b5f6";
+		ctx.lineWidth = 1.5;
+		ctx.setLineDash([4, 4]);
+		ctx.strokeRect(rx, ry, rw, rh);
+		ctx.restore();
+	  }
+
+	  // Dibuja la caja delimitadora con manijas de transformación / escalado
+	  if (typeof selectedNodes !== 'undefined' && selectedNodes.size > 0 && typeof isBoxSelecting !== 'undefined' && !isBoxSelecting) {
+		const bbox = (typeof getSelectionBoundingBox === 'function') ? getSelectionBoundingBox() : null;
+		if (bbox) {
+			ctx.save();
+			// Borde del rectángulo de escalado
+			ctx.strokeStyle = "#00e5ff";
+			ctx.lineWidth = 1.5;
+			ctx.setLineDash([4, 4]);
+			ctx.strokeRect(bbox.minX, bbox.minY, bbox.width, bbox.height);
+
+			// Manijas en las 4 esquinas y 4 centros de los bordes
+			const hs = 8;
+			ctx.setLineDash([]);
+			ctx.fillStyle = "#ffffff";
+			ctx.strokeStyle = "#0088cc";
+			ctx.lineWidth = 1.5;
+
+			const handles = [
+				{ x: bbox.minX, y: bbox.minY },
+				{ x: bbox.maxX, y: bbox.minY },
+				{ x: bbox.maxX, y: bbox.maxY },
+				{ x: bbox.minX, y: bbox.maxY },
+				{ x: bbox.centerX, y: bbox.minY },
+				{ x: bbox.centerX, y: bbox.maxY },
+				{ x: bbox.minX, y: bbox.centerY },
+				{ x: bbox.maxX, y: bbox.centerY }
+			];
+
+			handles.forEach(h => {
+				ctx.fillRect(h.x - hs / 2, h.y - hs / 2, hs, hs);
+				ctx.strokeRect(h.x - hs / 2, h.y - hs / 2, hs, hs);
+			});
+			ctx.restore();
+		}
+	  }
+	}
+
+	// Function to draw the tapered oval
+	/**
+	 * Draws a squashed, flattened oval (a tapered line) with rounded ends.
+	 * @param {CanvasRenderingContext2D} ctx - The canvas rendering context.
+	 * @param {number} x1 - The x-coordinate of the start point.
+	 * @param {number} y1 - The y-coordinate of the start point.
+	 * @param {number} x2 - The x-coordinate of the end point.
+	 * @param {number} y2 - The y-coordinate of the end point.
+	 * @param {string} color - The fill color of the line.
+	 * @param {number} thickness - The maximum thickness of the line.
+	 * @param {number} taperPercent - The percentage (0-100) of thickness at the ends.
+	 */
+	function drawTaperedOval(ctx, x1, y1, x2, y2, color, thickness, taperPercent) {
+		const dist = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+		const angle = Math.atan2(y2 - y1, x2 - x1);
+		const taperWidth = (thickness * taperPercent) / 100;
+
+		// Calculate offset for control points based on angle
+		const halfThick = thickness / 2;
+		const halfTaper = taperWidth / 2;
+
+		// Vector perpendicular to the line
+		const normalX = Math.sin(angle);
+		const normalY = -Math.cos(angle);
+
+		// Control points for the top curve
+		const cp1x = x1 + dist * 0.25;
+		const cp1y = y1;
+		const cp2x = x1 + dist * 0.75;
+		const cp2y = y1;
+
+		// Point offsets for top and bottom curves
+		const startPointTopX = x1 + normalX * halfTaper;
+		const startPointTopY = y1 + normalY * halfTaper;
+		const endPointTopX = x2 + normalX * halfTaper;
+		const endPointTopY = y2 + normalY * halfTaper;
+
+		const startPointBottomX = x1 - normalX * halfTaper;
+		const startPointBottomY = y1 - normalY * halfTaper;
+		const endPointBottomX = x2 - normalX * halfTaper;
+		const endPointBottomY = y2 - normalY * halfTaper;
+		
+		// Midpoint offset for max thickness
+		const midPointTopX = x1 + (x2 - x1) * 0.5 + normalX * halfThick;
+		const midPointTopY = y1 + (y2 - y1) * 0.5 + normalY * halfThick;
+		const midPointBottomX = x1 + (x2 - x1) * 0.5 - normalX * halfThick;
+		const midPointBottomY = y1 + (y2 - y1) * 0.5 - normalY * halfThick;
+
+
+		// Draw the top half of the tapered oval
+		ctx.beginPath();
+		ctx.moveTo(startPointTopX, startPointTopY);
+		ctx.quadraticCurveTo(
+			midPointTopX, midPointTopY,
+			endPointTopX, endPointTopY
+		);
+		// Draw the bottom half of the tapered oval
+		ctx.quadraticCurveTo(
+			midPointBottomX, midPointBottomY,
+			startPointBottomX, startPointBottomY
+		);
+		ctx.closePath();
+
+		ctx.fillStyle = color;
+		ctx.fill();
+	}
+
+	function loadSelectedData() {
+	  const selector = document.getElementById("dataSelector");
+	  const selectedSetName = selector.value;
+	  const data = allDataSets[selectedSetName];
+
+	  applyData(data);
+	}
+
+	function applyData(data) {
+	  nodes.length = 0;
+	  lines.length = 0;
+
+	  if (typeof selectedNodes !== 'undefined') {
+	    selectedNodes.clear();
+	    if (typeof updateSelectionUI === 'function') updateSelectionUI();
+	  }
+
+	  if (data.nodes) {
+		data.nodes.forEach(nodeData => {
+		  nodes.push({ ...nodeData });
+		});
+	  }
+
+	  if (data.lines) {
+		data.lines.forEach(lineData => {
+		  if (nodes[lineData.start] && nodes[lineData.end]) {
+			lines.push({
+			  start: nodes[lineData.start],
+			  end: nodes[lineData.end],
+			  color: lineData.color
+			});
+		  }
+		});
+	  }
+
+	  draw();
+	}
+
+	function updateCanvasSize() {
+	  const sizeSelector = document.getElementById("canvasSizeSelector");
+	  const [newWidth, newHeight] = sizeSelector.value.split("x").map(Number);
+
+	  const oldWidth = canvas.width;
+	  const oldHeight = canvas.height;
+
+	  canvas.width = newWidth;
+	  canvas.height = newHeight;
+
+	  draw();
+	}
+
+	function exportCanvas() {
+	  // Desactivar temporalmente la imagen de guía y selección para exportar sólo el OpenPose sobre fondo negro
+	  const prevGuide = showGuide;
+	  const prevSelecting = (typeof isBoxSelecting !== 'undefined') ? isBoxSelecting : false;
+	  const prevSelected = (typeof selectedNodes !== 'undefined') ? new Set(selectedNodes) : new Set();
+
+	  showGuide = false;
+	  if (typeof isBoxSelecting !== 'undefined') isBoxSelecting = false;
+	  if (typeof selectedNodes !== 'undefined') selectedNodes.clear();
+	  draw();
+
+	  const link = document.createElement('a');
+	  link.download = 'canvas-export.png';
+	  link.href = canvas.toDataURL('image/png');
+	  link.click();
+
+	  showGuide = prevGuide;
+	  if (typeof isBoxSelecting !== 'undefined') isBoxSelecting = prevSelecting;
+	  if (typeof selectedNodes !== 'undefined') {
+	    prevSelected.forEach(n => selectedNodes.add(n));
+	  }
+	  draw();
+	}
+
+	// Funciones globales de conexión con el detector OpenPose por IA (MoveNet)
+	function handleMediaSelected(file) {
+	  if (!file || !window.openPoseDetector) return;
+	  openPoseDetector.handleFile(file);
+	}
+
+	function changeModelType(type) {
+	  if (window.openPoseDetector) {
+	    openPoseDetector.loadModel(type);
+	  }
+	}
+
+	function executePoseConversion() {
+	  if (window.openPoseDetector) {
+	    openPoseDetector.detectAndApplyPose();
+	  }
+	}
+
+	function captureCurrentKeyframe() {
+	  if (window.openPoseDetector) {
+	    openPoseDetector.addCurrentKeyframe();
+	  }
+	}
+
+	function stepVideo(frames) {
+	  const video = document.getElementById('aiPreviewVideo');
+	  if (!video) return;
+	  video.currentTime = Math.max(0, Math.min(video.duration || 0, video.currentTime + frames * 0.04));
+	}
+
+	function togglePlayVideo() {
+	  const video = document.getElementById('aiPreviewVideo');
+	  const btn = document.getElementById('btnPlayPause');
+	  if (!video) return;
+	  if (video.paused) {
+	    video.play();
+	    if (btn) btn.textContent = '⏸ Pausa';
+	  } else {
+	    video.pause();
+	    if (btn) btn.textContent = '▶ Play';
+	  }
+	}
+
+	function onVideoSliderInput(val) {
+	  const video = document.getElementById('aiPreviewVideo');
+	  if (video) {
+	    video.currentTime = parseFloat(val);
+	  }
+	}
+
+	function markRangeStart() {
+	  const video = document.getElementById('aiPreviewVideo');
+	  if (!video || !window.openPoseDetector) return;
+	  openPoseDetector.rangeStart = video.currentTime;
+	  openPoseDetector.updateVideoTimelineUI();
+	}
+
+	function markRangeEnd() {
+	  const video = document.getElementById('aiPreviewVideo');
+	  if (!video || !window.openPoseDetector) return;
+	  openPoseDetector.rangeEnd = video.currentTime;
+	  openPoseDetector.updateVideoTimelineUI();
+	}
+
+	function updateRangeValues() {
+	  if (!window.openPoseDetector) return;
+	  const start = parseFloat(document.getElementById('aiRangeStart').value) || 0;
+	  const end = parseFloat(document.getElementById('aiRangeEnd').value) || 0;
+	  openPoseDetector.rangeStart = start;
+	  openPoseDetector.rangeEnd = end;
+	}
+
+	function extractRangeKeyframes(count) {
+	  if (window.openPoseDetector) {
+	    openPoseDetector.extractRangeKeyframes(count);
+	  }
+	}
+
+	function startFullVideoProcessing() {
+	  if (!window.openPoseDetector) return;
+	  const isRange = document.getElementById('aiVideoScopeRange')?.checked || false;
+	  const fps = parseInt(document.getElementById('aiVideoFps')?.value, 10) || 24;
+	  const format = document.getElementById('aiVideoFormat')?.value || 'mp4';
+	  openPoseDetector.processFullVideo({ fps, useRange: isRange, format });
+	}
+
+	function cancelVideoProcessing() {
+	  if (window.openPoseDetector) {
+	    openPoseDetector.cancelRequested = true;
+	  }
+	}
+
+	function downloadGeneratedVideo() {
+	  if (window.openPoseDetector) {
+	    openPoseDetector.downloadGeneratedVideo();
+	  }
+	}
+
+	function downloadPoseSequenceJSON() {
+	  if (window.openPoseDetector) {
+	    openPoseDetector.downloadPoseSequenceJSON();
+	  }
+	}
+
+	function saveDataAsJSON() {
+	  const jsonData = {
+		nodes: nodes.map(n => ({ x: n.x, y: n.y, color: n.color })),
+		lines: lines.map(l => ({
+		  start: nodes.indexOf(l.start),
+		  end: nodes.indexOf(l.end),
+		  color: l.color
+		}))
+	  };
+
+	  const blob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
+	  const url = URL.createObjectURL(blob);
+	  const link = document.createElement('a');
+	  link.href = url;
+	  link.download = 'graph-data.json';
+	  link.click();
+	  URL.revokeObjectURL(url);
+	}
+
+	document.getElementById('fileInput').addEventListener('change', function (event) {
+	  const file = event.target.files[0];
+	  if (!file) return;
+
+	  const reader = new FileReader();
+	  reader.onload = function (e) {
+		try {
+		  const json = JSON.parse(e.target.result);
+		  applyData(json);
+		} catch (err) {
+		  alert(i18n.t('json.invalidJson'));
+		}
+	  };
+	  reader.readAsText(file);
+	});
+
+	// --- New: Shift nodes by X/Y amount (afecta nodos seleccionados o todos) ---
+	function shiftNodes(dirX, dirY) {
+	  const amount = parseFloat(document.getElementById("shiftAmount").value) || 0;
+	  const targetNodes = (selectedNodes.size > 0) ? Array.from(selectedNodes) : nodes;
+
+	  targetNodes.forEach(n => {
+		n.x += dirX * amount;
+		n.y += dirY * amount;
+	  });
+
+	  draw();
+	}
+
+	// =========================================================================
+	// Interacción Avanzada de Canvas: Modo Hueso, Selección y Escalado en Grupo
+	// =========================================================================
+
+	let boneMode = false;
+	const selectedNodes = new Set();
+	let isBoxSelecting = false;
+	let boxStart = { x: 0, y: 0 };
+	let boxCurrent = { x: 0, y: 0 };
+
+	let isDragging = false;
+	let activeDragNodes = [];
+	let lastMousePos = { x: 0, y: 0 };
+
+	// Variables para escalado interactivo mediante caja delimitadora
+	let isScaling = false;
+	let activeScaleHandle = null;
+	let scaleInitialBBox = null;
+	let scaleInitialNodes = [];
+
+	// Calcula la caja delimitadora que encierra los nodos seleccionados
+	function getSelectionBoundingBox() {
+	  if (selectedNodes.size === 0) return null;
+	  let minX = Infinity, maxX = -Infinity;
+	  let minY = Infinity, maxY = -Infinity;
+	  for (const n of selectedNodes) {
+		if (n.x < minX) minX = n.x;
+		if (n.x > maxX) maxX = n.x;
+		if (n.y < minY) minY = n.y;
+		if (n.y > maxY) maxY = n.y;
+	  }
+	  const padding = 12;
+	  const w = Math.max(16, (maxX - minX));
+	  const h = Math.max(16, (maxY - minY));
+	  const cx = (minX + maxX) / 2;
+	  const cy = (minY + maxY) / 2;
+
+	  return {
+		minX: cx - w / 2 - padding,
+		maxX: cx + w / 2 + padding,
+		minY: cy - h / 2 - padding,
+		maxY: cy + h / 2 + padding,
+		get width() { return this.maxX - this.minX; },
+		get height() { return this.maxY - this.minY; },
+		get centerX() { return (this.minX + this.maxX) / 2; },
+		get centerY() { return (this.minY + this.maxY) / 2; }
+	  };
+	}
+
+	// Detecta si el puntero está sobre alguna manija o sobre las orillas del recuadro
+	function getTransformTargetAt(mouseX, mouseY, bbox) {
+	  if (!bbox) return null;
+	  const hs = 8;
+	  const hit = 7;
+
+	  const handles = [
+		{ type: 'nw', x: bbox.minX, y: bbox.minY, cursor: 'nwse-resize' },
+		{ type: 'ne', x: bbox.maxX, y: bbox.minY, cursor: 'nesw-resize' },
+		{ type: 'se', x: bbox.maxX, y: bbox.maxY, cursor: 'nwse-resize' },
+		{ type: 'sw', x: bbox.minX, y: bbox.maxY, cursor: 'nesw-resize' },
+		{ type: 'n',  x: bbox.centerX, y: bbox.minY, cursor: 'ns-resize' },
+		{ type: 's',  x: bbox.centerX, y: bbox.maxY, cursor: 'ns-resize' },
+		{ type: 'w',  x: bbox.minX, y: bbox.centerY, cursor: 'ew-resize' },
+		{ type: 'e',  x: bbox.maxX, y: bbox.centerY, cursor: 'ew-resize' }
+	  ];
+
+	  // 1. Manijas principales de esquinas y centros
+	  for (const h of handles) {
+		if (Math.abs(mouseX - h.x) <= hit + hs / 2 && Math.abs(mouseY - h.y) <= hit + hs / 2) {
+		  return h;
+		}
+	  }
+
+	  // 2. Orillas / bordes del rectángulo
+	  const edgeTol = 5;
+	  if (mouseX >= bbox.minX - edgeTol && mouseX <= bbox.maxX + edgeTol) {
+		if (Math.abs(mouseY - bbox.minY) <= edgeTol) return { type: 'n', cursor: 'ns-resize' };
+		if (Math.abs(mouseY - bbox.maxY) <= edgeTol) return { type: 's', cursor: 'ns-resize' };
+	  }
+	  if (mouseY >= bbox.minY - edgeTol && mouseY <= bbox.maxY + edgeTol) {
+		if (Math.abs(mouseX - bbox.minX) <= edgeTol) return { type: 'w', cursor: 'ew-resize' };
+		if (Math.abs(mouseX - bbox.maxX) <= edgeTol) return { type: 'e', cursor: 'ew-resize' };
+	  }
+
+	  return null;
+	}
+
+	// Escala los nodos seleccionados (o todos) por un factor multiplicativo respecto al centro
+	function scaleSelection(factor) {
+	  if (selectedNodes.size === 0) {
+		selectAllNodes();
+	  }
+	  const bbox = getSelectionBoundingBox();
+	  if (!bbox) return;
+
+	  const cx = bbox.centerX;
+	  const cy = bbox.centerY;
+
+	  selectedNodes.forEach(node => {
+		node.x = cx + (node.x - cx) * factor;
+		node.y = cy + (node.y - cy) * factor;
+	  });
+
+	  draw();
+	}
+
+	// Ajusta automáticamente el esqueleto al tamaño actual del lienzo (Fit to Canvas)
+	function fitSelectionToCanvas() {
+	  if (selectedNodes.size === 0) {
+		selectAllNodes();
+	  }
+	  const bbox = getSelectionBoundingBox();
+	  if (!bbox || bbox.width <= 0 || bbox.height <= 0) return;
+
+	  // Dejar un 15% de margen respecto al lienzo
+	  const targetW = canvas.width * 0.85;
+	  const targetH = canvas.height * 0.85;
+
+	  const scale = Math.min(targetW / bbox.width, targetH / bbox.height);
+	  const oldCenterX = bbox.centerX;
+	  const oldCenterY = bbox.centerY;
+	  const canvasCenterX = canvas.width / 2;
+	  const canvasCenterY = canvas.height / 2;
+
+	  selectedNodes.forEach(node => {
+		node.x = canvasCenterX + (node.x - oldCenterX) * scale;
+		node.y = canvasCenterY + (node.y - oldCenterY) * scale;
+	  });
+
+	  draw();
+	}
+
+	// Jerarquía cinemática de extremidades OpenPose COCO-18
+	// Al mover un padre en Modo Hueso, sus articulaciones hijas se desplazan con él
+	const boneHierarchy = {
+	  // Brazo derecho: 2(hombro) -> 3(codo) -> 4(muñeca)
+	  2: [2, 3, 4],
+	  3: [3, 4],
+	  4: [4],
+	  // Brazo izquierdo: 5(hombro) -> 6(codo) -> 7(muñeca)
+	  5: [5, 6, 7],
+	  6: [6, 7],
+	  7: [7],
+	  // Pierna derecha: 8(cadera) -> 9(rodilla) -> 10(tobillo)
+	  8: [8, 9, 10],
+	  9: [9, 10],
+	  10: [10],
+	  // Pierna izquierda: 11(cadera) -> 12(rodilla) -> 13(tobillo)
+	  11: [11, 12, 13],
+	  12: [12, 13],
+	  13: [13],
+	  // Cabeza / Rostro: 0(nariz) -> 14,15(ojos) -> 16,17(orejas)
+	  0: [0, 14, 15, 16, 17],
+	  14: [14, 16],
+	  15: [15, 17],
+	  16: [16],
+	  17: [17],
+	  // Cuello: 1 -> mueve cuello y cabeza
+	  1: [1, 0, 14, 15, 16, 17]
+	};
+
+	function getLimbNodes(node) {
+	  const index = nodes.indexOf(node);
+	  if (index === -1) return [node];
+	  const indices = boneHierarchy[index] || [index];
+	  return indices.map(i => nodes[i]).filter(Boolean);
+	}
+
+	function getNodeAt(x, y, hitRadius = 12) {
+	  for (let i = nodes.length - 1; i >= 0; i--) {
+		const node = nodes[i];
+		const dx = x - node.x;
+		const dy = y - node.y;
+		if (Math.sqrt(dx * dx + dy * dy) <= hitRadius) {
+		  return node;
+		}
+	  }
+	  return null;
+	}
+
+	function toggleBoneMode() {
+	  boneMode = !boneMode;
+	  updateBoneModeUI();
+	}
+
+	function updateBoneModeUI() {
+	  const btn = document.getElementById('btnToggleBoneMode');
+	  const txt = document.getElementById('boneModeText');
+	  if (!btn || !txt) return;
+
+	  if (boneMode) {
+		btn.style.background = '#1565c0';
+		btn.style.borderColor = '#2196f3';
+		btn.style.boxShadow = '0 0 8px rgba(33, 150, 243, 0.5)';
+		txt.textContent = typeof i18n !== 'undefined' ? i18n.t('tools.boneModeOn') : '🦴 Modo Hueso: ACTIVADO';
+	  } else {
+		btn.style.background = '#2e3c4d';
+		btn.style.borderColor = '#4a6582';
+		btn.style.boxShadow = 'none';
+		txt.textContent = typeof i18n !== 'undefined' ? i18n.t('tools.boneModeOff') : '🦴 Modo Hueso: DESACTIVADO';
+	  }
+	}
+
+	function selectAllNodes() {
+	  selectedNodes.clear();
+	  nodes.forEach(n => selectedNodes.add(n));
+	  updateSelectionUI();
+	  draw();
+	}
+
+	function clearSelectedNodes() {
+	  selectedNodes.clear();
+	  updateSelectionUI();
+	  draw();
+	}
+
+	function updateSelectionUI() {
+	  const badge = document.getElementById('selectionBadge');
+	  if (!badge) return;
+	  const count = selectedNodes.size;
+	  if (typeof i18n !== 'undefined') {
+		badge.textContent = i18n.t('tools.selectedCount').replace('{count}', count);
+	  } else {
+		badge.textContent = `${count} seleccionados`;
+	  }
+	  badge.style.background = count > 0 ? '#1b5e20' : '#1e2936';
+	  badge.style.color = count > 0 ? '#a5d6a7' : '#90caf9';
+	}
+
+	// Manejo de eventos del mouse en el Canvas
+	canvas.addEventListener('mousedown', (e) => {
+	  const rect = canvas.getBoundingClientRect();
+	  const mouseX = e.clientX - rect.left;
+	  const mouseY = e.clientY - rect.top;
+
+	  lastMousePos = { x: mouseX, y: mouseY };
+
+	  // 1. Verificar si el clic fue en una manija u orilla de escalado
+	  const bbox = getSelectionBoundingBox();
+	  const scaleTarget = (selectedNodes.size > 0 && bbox) ? getTransformTargetAt(mouseX, mouseY, bbox) : null;
+
+	  if (scaleTarget) {
+		isScaling = true;
+		activeScaleHandle = scaleTarget;
+		scaleInitialBBox = {
+		  minX: bbox.minX,
+		  maxX: bbox.maxX,
+		  minY: bbox.minY,
+		  maxY: bbox.maxY,
+		  width: bbox.width,
+		  height: bbox.height,
+		  centerX: bbox.centerX,
+		  centerY: bbox.centerY
+		};
+		scaleInitialNodes = Array.from(selectedNodes).map(n => ({ node: n, startX: n.x, startY: n.y }));
+		canvas.style.cursor = scaleTarget.cursor;
+		return;
+	  }
+
+	  // 2. Verificar si se hizo clic en un nodo
+	  const clickedNode = getNodeAt(mouseX, mouseY, 12);
+
+	  if (clickedNode) {
+		let nodesToDrag = [];
+
+		if (boneMode) {
+		  // En Modo Hueso: mover toda la extremidad (padre e hijos)
+		  if (selectedNodes.has(clickedNode) && selectedNodes.size > 1) {
+			const limbSet = new Set(selectedNodes);
+			for (const sn of selectedNodes) {
+			  getLimbNodes(sn).forEach(n => limbSet.add(n));
+			}
+			nodesToDrag = Array.from(limbSet);
+		  } else {
+			nodesToDrag = getLimbNodes(clickedNode);
+			selectedNodes.clear();
+			nodesToDrag.forEach(n => selectedNodes.add(n));
+		  }
+		} else {
+		  // Modo Normal:
+		  if (selectedNodes.has(clickedNode)) {
+			nodesToDrag = Array.from(selectedNodes);
+		  } else {
+			if (!e.shiftKey) {
+			  selectedNodes.clear();
+			}
+			selectedNodes.add(clickedNode);
+			nodesToDrag = [clickedNode];
+		  }
+		}
+
+		isDragging = true;
+		activeDragNodes = nodesToDrag;
+		updateSelectionUI();
+		canvas.style.cursor = 'grabbing';
+		draw();
+		return;
+	  }
+
+	  // 3. Verificar si se hizo clic dentro de la caja delimitadora (arrastrar caja completa)
+	  if (bbox && selectedNodes.size > 0 && mouseX >= bbox.minX && mouseX <= bbox.maxX && mouseY >= bbox.minY && mouseY <= bbox.maxY) {
+		isDragging = true;
+		activeDragNodes = Array.from(selectedNodes);
+		canvas.style.cursor = 'grabbing';
+		draw();
+		return;
+	  }
+
+	  // 4. Clic en fondo libre: iniciar selección por recuadro
+	  if (!e.shiftKey) {
+		selectedNodes.clear();
+		updateSelectionUI();
+	  }
+	  isBoxSelecting = true;
+	  boxStart = { x: mouseX, y: mouseY };
+	  boxCurrent = { x: mouseX, y: mouseY };
+	  draw();
+	});
+
+	canvas.addEventListener('mousemove', (e) => {
+	  const rect = canvas.getBoundingClientRect();
+	  const mouseX = e.clientX - rect.left;
+	  const mouseY = e.clientY - rect.top;
+
+	  // A. Si estamos escalando al tirar de una orilla/manija
+	  if (isScaling && scaleInitialBBox && scaleInitialNodes.length > 0) {
+		const initW = Math.max(10, scaleInitialBBox.width);
+		const initH = Math.max(10, scaleInitialBBox.height);
+		let anchorX = scaleInitialBBox.centerX;
+		let anchorY = scaleInitialBBox.centerY;
+		let factorX = 1;
+		let factorY = 1;
+
+		if (activeScaleHandle.type.includes('w')) {
+		  anchorX = scaleInitialBBox.maxX;
+		  factorX = Math.max(0.05, (anchorX - mouseX) / initW);
+		} else if (activeScaleHandle.type.includes('e')) {
+		  anchorX = scaleInitialBBox.minX;
+		  factorX = Math.max(0.05, (mouseX - anchorX) / initW);
+		}
+
+		if (activeScaleHandle.type.includes('n')) {
+		  anchorY = scaleInitialBBox.maxY;
+		  factorY = Math.max(0.05, (anchorY - mouseY) / initH);
+		} else if (activeScaleHandle.type.includes('s')) {
+		  anchorY = scaleInitialBBox.minY;
+		  factorY = Math.max(0.05, (mouseY - anchorY) / initH);
+		}
+
+		// Mantener aspecto uniforme en esquinas o si se presiona Shift
+		if (e.shiftKey || ['nw', 'ne', 'se', 'sw'].includes(activeScaleHandle.type)) {
+		  const uniform = Math.max(factorX, factorY);
+		  factorX = uniform;
+		  factorY = uniform;
+		}
+
+		for (const item of scaleInitialNodes) {
+		  if (activeScaleHandle.type.includes('w')) {
+			item.node.x = anchorX - (anchorX - item.startX) * factorX;
+		  } else if (activeScaleHandle.type.includes('e')) {
+			item.node.x = anchorX + (item.startX - anchorX) * factorX;
+		  }
+
+		  if (activeScaleHandle.type.includes('n')) {
+			item.node.y = anchorY - (anchorY - item.startY) * factorY;
+		  } else if (activeScaleHandle.type.includes('s')) {
+			item.node.y = anchorY + (item.startY - anchorY) * factorY;
+		  }
+		}
+
+		draw();
+		return;
+	  }
+
+	  // B. Si estamos arrastrando nodos seleccionados
+	  if (isDragging && activeDragNodes.length > 0) {
+		const dx = mouseX - lastMousePos.x;
+		const dy = mouseY - lastMousePos.y;
+
+		for (const node of activeDragNodes) {
+		  node.x += dx;
+		  node.y += dy;
+		}
+
+		lastMousePos = { x: mouseX, y: mouseY };
+		draw();
+		return;
+	  }
+
+	  // C. Si estamos dibujando la caja de selección
+	  if (isBoxSelecting) {
+		boxCurrent = { x: mouseX, y: mouseY };
+		draw();
+		return;
+	  }
+
+	  // D. Estado de reposo: actualizar el cursor inteligentemente
+	  const bbox = getSelectionBoundingBox();
+	  const scaleTarget = (selectedNodes.size > 0 && bbox) ? getTransformTargetAt(mouseX, mouseY, bbox) : null;
+
+	  if (scaleTarget) {
+		canvas.style.cursor = scaleTarget.cursor;
+	  } else {
+		const hoverNode = getNodeAt(mouseX, mouseY, 12);
+		if (hoverNode) {
+		  canvas.style.cursor = 'grab';
+		} else if (bbox && selectedNodes.size > 0 && mouseX >= bbox.minX && mouseX <= bbox.maxX && mouseY >= bbox.minY && mouseY <= bbox.maxY) {
+		  canvas.style.cursor = 'move';
+		} else {
+		  canvas.style.cursor = 'crosshair';
+		}
+	  }
+	});
+
+	canvas.addEventListener('mouseup', (e) => {
+	  const rect = canvas.getBoundingClientRect();
+	  const mouseX = e.clientX - rect.left;
+	  const mouseY = e.clientY - rect.top;
+
+	  if (isScaling) {
+		isScaling = false;
+		activeScaleHandle = null;
+		scaleInitialBBox = null;
+		scaleInitialNodes = [];
+		draw();
+	  }
+
+	  if (isBoxSelecting) {
+		const minX = Math.min(boxStart.x, boxCurrent.x);
+		const maxX = Math.max(boxStart.x, boxCurrent.x);
+		const minY = Math.min(boxStart.y, boxCurrent.y);
+		const maxY = Math.max(boxStart.y, boxCurrent.y);
+
+		if (Math.abs(boxCurrent.x - boxStart.x) > 3 || Math.abs(boxCurrent.y - boxStart.y) > 3) {
+		  for (const node of nodes) {
+			if (node.x >= minX && node.x <= maxX && node.y >= minY && node.y <= maxY) {
+			  selectedNodes.add(node);
+			}
+		  }
+		}
+		isBoxSelecting = false;
+		updateSelectionUI();
+		draw();
+	  }
+
+	  isDragging = false;
+	  activeDragNodes = [];
+	});
+
+	canvas.addEventListener('mouseleave', () => {
+	  if (isBoxSelecting) {
+		isBoxSelecting = false;
+		draw();
+	  }
+	  if (isScaling) {
+		isScaling = false;
+		activeScaleHandle = null;
+		scaleInitialBBox = null;
+		scaleInitialNodes = [];
+		draw();
+	  }
+	  isDragging = false;
+	  activeDragNodes = [];
+	  canvas.style.cursor = 'default';
+	});
+
+	// Atajo de teclado: Escape para limpiar selección
+	window.addEventListener('keydown', (e) => {
+	  if (e.key === 'Escape') {
+		clearSelectedNodes();
+	  }
+	});
+
+	window.onload = () => {
+	  i18n.init();
+	  loadSelectedData();
+	  updateCanvasSize();
+
+	  // Configurar listeners del reproductor de video para OpenPose
+	  const previewVideo = document.getElementById('aiPreviewVideo');
+	  if (previewVideo) {
+	    previewVideo.addEventListener('timeupdate', () => {
+	      if (window.openPoseDetector) {
+	        openPoseDetector.updateVideoTimelineUI();
+	      }
+	      if (showGuide) {
+	        openPoseDetector.updateGuideFromVideoFrame();
+	      }
+	    });
+	    previewVideo.addEventListener('seeked', () => {
+	      if (window.openPoseDetector) {
+	        openPoseDetector.updateVideoTimelineUI();
+	      }
+	      if (showGuide) {
+	        openPoseDetector.updateGuideFromVideoFrame();
+	      }
+	    });
+	  }
+	};
+
+
+</script>
+  
+</body>
+</html>
